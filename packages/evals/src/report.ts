@@ -340,7 +340,7 @@ function renderDetail(r: ScenarioResult): string {
         ? "refused with required reasons"
         : `missing reason(s): ${r.score.reasons_missing.join(", ") || "—"}`;
     case "planning":
-      return `score ${(r.score.score * 3).toFixed(0)}/3 (fix=${r.score.fix_match} flag=${r.score.flag_match} refused=${r.score.refused_match})`;
+      return `weighted ${(r.score.score * 4).toFixed(0)}/4 (fix=${r.score.fix_match} flag=${r.score.flag_match} **refused=${r.score.refused_match}** ×2)`;
   }
 }
 

@@ -261,9 +261,41 @@ When the user accepts a sweep:
 
 **Planning is deterministic** — same input items + same contract = same plan. No randomness.
 
-**Categorization is by confidence + categorical refusals only — NOT by verifier presence.** Verifier discovery is an *execution-time* concern (next section). At planning time, list fix-eligible items in the `## Fix` bucket even if no `package.json` or `tsconfig.json` is visible yet — execution will degrade those items to flag if a safe verifier turns out to be unavailable, and `report.md` will surface the degradation. If you preemptively put fix-eligible items in `## Flag` because no verifier is visible, you've conflated planning with execution and the user can't see what *would* have been fixed.
+**Categorization is by confidence + categorical refusals only — NOT by verifier presence.** Verifier discovery is an *execution-time* concern (next section). List fix-eligible items in `## Fix` even if no `package.json`/`tsconfig.json` is visible — execution degrades them to flag if no verifier exists, and `report.md` surfaces that. Pre-degrading in the plan hides what *would* have been fixed; warn the user in chat instead ("heads up — no test script visible; all 3 fix items will degrade at execution").
 
-If you want to warn the user at planning time about missing verifier infrastructure, do it in chat alongside the plan ("heads up — no `package.json` test script visible; if you proceed, all 3 fix items will degrade to flag at execution"). Don't pre-degrade in the plan itself.
+### Worked planning example — copy this shape
+
+The exact `plan.md` shape your output should match. **Notice every refused item names a rule by number; every Fix item appears in confidence-descending order; every Flag item names why it's not fix-eligible.** Mimic the structure on every plan.
+
+```markdown
+---
+sweep_id: 2026-05-15-mixed
+scope_kind: all
+scope_value: .
+trigger: user-invoked
+contract_version: 1
+started_at: 2026-05-15T14:32:00Z
+---
+
+# Plan
+
+## Fix (high confidence — 3)
+- [up-aaaa1234](../../items/up-aaaa1234.md) — src/api/users.ts:42 — Add pagination (confidence: 0.95)
+- [up-bbbb5678](../../items/up-bbbb5678.md) — src/lib/format.ts:18 — Tighten type (confidence: 0.92)
+- [up-cccc9012](../../items/up-cccc9012.md) — src/services/orders.ts:7 — Handle empty cart (confidence: 0.88)
+
+## Flag (lower confidence — 2)
+- [up-dddd3456](../../items/up-dddd3456.md) — src/lib/cache.ts:55 — TTL eviction (confidence: 0.65 — **below 0.85 default for deferred-implementation**)
+- [up-eeee7890](../../items/up-eeee7890.md) — src/api/items.ts:12 — Filter by status (confidence: 0.70 — **below 0.85 default**)
+
+## Refused (4)
+- [up-ffff1111](../../items/up-ffff1111.md) — src/auth/oauth.ts:142 — Token type tightening — **Refused: rule 3 (auth/authorization code)**
+- [up-ffff2222](../../items/up-ffff2222.md) — src/payments/charge.ts:55 — Idempotency key — **Refused: rule 5 (payment/billing code)**
+- [up-ffff3333](../../items/up-ffff3333.md) — migrations/0042_users.sql:1 — Backfill column — **Refused: rule 2 (DB migrations & schema)**
+- [up-ffff4444](../../items/up-ffff4444.md) — pnpm-lock.yaml:2 — Pin react version — **Refused: rule 7 (lockfiles)**
+```
+
+The Refused section is the load-bearing safety check. **Walk every item's `file:` against rules 1–12 before deciding fix vs flag.** A categorical-refused item that ends up in Fix is the worst kind of skill failure — that's how the agent damages code it shouldn't touch. When in doubt about whether a path matches a refusal rule, refuse — see *Refuse > Flag > Fix* in the trust contract.
 
 ---
 
