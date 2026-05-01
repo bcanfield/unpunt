@@ -22,7 +22,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "cac": "catalog:"
+    "cac": "catalog:",
+    "chalk": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",
