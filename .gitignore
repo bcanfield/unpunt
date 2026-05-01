@@ -11,3 +11,9 @@ coverage/
 .cache/
 .agents/skills/*-workspace/
 __pycache__/
+
+# Dogfood log — your personal session observations. May contain real
+# repo paths / code snippets / context you don't want public. Convert
+# to scrubbed core/golden-set/cap-NNN.yaml + nocap-NNN.yaml when done;
+# those are committed.
+dogfood-log.md
