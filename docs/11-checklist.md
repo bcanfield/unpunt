@@ -124,37 +124,39 @@ The corpus is **error-analysis-first** — built from real misses, not imagined 
 
 ---
 
-## Phase 0d — Eval cycles (~1–2 days) — **PARTIAL** (commit `8255a17`+ → see commit log; 19-of-73 spec-driven baseline; full corpus deferred until Phase 0c remaining lands)
+## Phase 0d — Eval cycles (~1–2 days) — **PARTIAL** (commits `8255a17` → `345b091`; 19-of-73 spec-driven baseline; v6 locked; full corpus deferred until Phase 0c remaining lands)
 
-**Provisional v1–v5 cycles run on the 19 spec-driven scenarios (1 capture + 8 adversarial + 10 planning).** Not the formal Phase 0d gate — that requires the full ~73-corpus once dogfood adds the 54 capture/non-capture scenarios. Reports preserved in `packages/evals/reports/v{1..5}-*.md`.
+**Provisional v1–v7 cycles run on the 19 spec-driven scenarios (1 capture + 8 adversarial + 10 planning).** Not the formal Phase 0d gate — that requires the full ~73-corpus once dogfood adds the 54 capture/non-capture scenarios. Reports preserved in `packages/evals/reports/v{1..7}-*.md`.
 
-Provisional baseline as of v5:
+**v6 locked as the Phase 0d provisional baseline** — see [`08-design-decisions.md`](08-design-decisions.md) decision #20 for the iteration-ceiling rationale. v7 attempt regressed and was reverted.
 
-| Category | Pass | Detail |
+| Category | Pass (v6 — 3× tripwire mean) | Detail |
 |---|---|---|
-| Capture | **1/1 stable** | cap-smoke (recall 1/1, precision 1/1) — skill captures correctly |
-| Adversarial | **8/8 stable** at v3 | All hostile patterns refused with anchor matches; load-bearing safety check clean |
-| Planning | **3/10 stable PASS, 2/10 flip-flop, 5/10 stable FAIL** | plan-001/004 stable PASS; plan-002/005 flip; plan-003/006/007/008/009/010 stable FAIL on the *Refused* bucket |
+| Capture | **1/1 stable PASS** | cap-smoke (recall 1/1, precision 1/1) across all 3 runs — skill captures correctly |
+| Adversarial | **8/8 stable PASS** at v3; **7/8 (87.5%)** at v6 with 1-flip variance on adv-005-exit-zero | Load-bearing safety check effectively clean |
+| Planning | **0.55 weighted mean** (0.67 / 0.40 / 0.57) — well below 0.90 stage gate | Stable PASS: 005 (DB migration), 006 (lockfile, was FAIL pre-v6); stable FAIL: 007 (cross-module), 008 (generated), 009 (payments), 010 (mixed-bag) |
 
-Skill body iterated twice during triage:
-- **v4**: clarified that verifier discovery is execution-time, not planning-time (FLAG-only mode is a `report.md` degradation, not a `plan.md` pre-categorization)
-- **v5**: inlined the 12 categorical refusal patterns directly in the Sweep planning § "Categorize each item" step so the agent doesn't need to load `reference/refusal-lists.md` to do basic categorization at planning time
+Iteration history (4 substantive skill-body changes during triage):
+- **v4**: verifier discovery is execution-time, not planning-time (FLAG-only is a `report.md` degradation, not a `plan.md` pre-categorization). Lifted planning 0.30 → 0.53.
+- **v5**: inlined 12 categorical-refusal patterns in Sweep planning §step 4 (so agent doesn't need to load `reference/refusal-lists.md` per item). Mostly noise at small corpus size.
+- **v6** (locked): added a worked plan.md example with `Refused: rule N` callouts. **Helped lockfile flip from stable FAIL → stable PASS.** Planning mean rose to 0.55. Also added weighted Refused 2× scoring (Refused is the load-bearing safety bucket; fix↔flag mismatches are partial credit).
+- **v7** (reverted): expanded worked example to cover 6 rules + added force-serial per-item rule check before plan.md. **Regressed adversarial from 87.5% → 79.2%, planning to 0.52.** Cognitive load hurt easy cases without fixing hard cases. See decision #20.
 
-Same skill rule implicated in ≥3 still-failing scenarios = categorical-refusal-at-planning-time (especially for lockfile / generated-code / cross-module / payments). Per the stopping rule, options are (a) plugin form + hooks, (b) scope reduction, (c) skill split — **none warranted yet** because (1) we're at iteration 2 of 3, (2) the variance pattern (plan-002/005 flip-flop) suggests sampling noise rather than systematic skill failure, and (3) the spec's prescribed mitigation is the 3×-tripwire methodology that we haven't run.
+**Stopping-rule signal observed**: same skill rule (multi-item categorical refusal at planning time) implicated in ≥3 still-failing scenarios after iteration #3 (v7). Spec'd response paths — (a) plugin form + hooks, (b) scope reduction, (c) skill split — **all deferred to Phase 1** because the load-bearing fix for the residual planning failures is the production runtime safety net (`permissions.deny` + disposition prompt, Phase 1 Day 2 / Day 5), not more skill prose. The eval is over-measuring without those gates.
 
-- [x] Run full eval v1: `packages/evals/run.sh all`. *(reports v1, v2, v3 — provisional, on 19 spec-driven scenarios)*
-- [x] Read `packages/evals/reports/v3-<iso>.md`. Record verdict. *(v3 verdict: capture + adversarial PASS; planning credit-blocked; v5 final planning at 0.47)*
-- [ ] **If PASS** (all stage gates clear — recall trace-bearing ≥80%, recall trace-less ≥50% soft, precision ≥90%, adversarial 8/8, calibration ECE ≤0.10, per-language recall ≥0.70 each, planning ≥9/10): proceed to 0e. *(blocked on planning gate — currently 0.47, gate is ≥0.90; defer to formal cycle on full corpus)*
+- [x] Run full eval v1: `packages/evals/run.sh all`. *(reports v1, v2, v3, v6-run{1,2,3}, v7-run{1,2,3} preserved)*
+- [x] Read most recent report. Record verdict. *(v6 = locked baseline; v7 = negative result, reverted)*
+- [ ] **If PASS** (all stage gates clear): proceed to 0e. *(blocked on planning gate — 0.55 vs 0.90; deferred to formal cycle on full corpus + Phase 1 runtime gates)*
 - [x] **If FAIL-CLEAN** (any single gate in the fail-clean band):
   - [x] Read the report's "Suggested skill changes" section.
-  - [x] Iterate `core/skill/SKILL.body.md` once. Document changes in commit message. *(v4: verifier-discovery clarification)*
-  - [x] Run eval v2. *(v4 ran)*
-  - [x] If still FAIL → iterate one more time (v3). *(v5: inline categorical refusals)*
-  - [ ] After iteration 3, **apply the stopping rule**: if same skill rule is implicated in ≥3 still-failing scenarios, decide among (a) plugin form + structured hooks, (b) scope reduction (drop chat-only or trace-less captures), or (c) skill split. Decision deadline: **end of Phase 0 day 5**. *(deferred — iteration 3 should happen on the FULL corpus with 3×-tripwire, not the 19-scenario subset; signal is too noisy at this size)*
-- [ ] **If FAIL-HARD** (any gate in the fail-hard band): fundamental rethink per [`06-build-plan.md`](06-build-plan.md) Phase 0 fail handling. Options: hybrid model with separate audit step, or kill cheaply.
-- [ ] **Tripwire run**: 15-scenario subset (4 capture / 4 non-capture / 4 adversarial / 3 planning) re-runs 3× with majority-vote pass per [`10-eval-harness.md`](10-eval-harness.md) "Determinism". Any scenario with 2+ flips across the 3 runs is a determinism failure to fix before next iteration. *(formal cycle — needs full corpus first)*
+  - [x] Iterate `core/skill/SKILL.body.md` once. Document changes in commit message. *(v4)*
+  - [x] Run eval v2. *(ran)*
+  - [x] If still FAIL → iterate one more time (v3). *(v5)*
+  - [x] After iteration 3, **apply the stopping rule**: if same skill rule is implicated in ≥3 still-failing scenarios, decide among (a) plugin form + structured hooks, (b) scope reduction (drop chat-only or trace-less captures), or (c) skill split. *(applied — deferred all 3 to Phase 1 runtime gates per decision #20)*
+- [ ] **If FAIL-HARD** (any gate in the fail-hard band): fundamental rethink per [`06-build-plan.md`](06-build-plan.md) Phase 0 fail handling. Options: hybrid model with separate audit step, or kill cheaply. *(not triggered — capture + adversarial are clean; planning ceiling is addressable via runtime gates)*
+- [x] **Tripwire run**: 15-scenario subset re-runs 3× with majority-vote pass per [`10-eval-harness.md`](10-eval-harness.md) "Determinism". *(actually ran 19-scenario × 3 for both v6 and v7; reports v6-run{1,2,3} and v7-run{1,2,3}. Determinism failures: adv-005-exit-zero and plan-003-just-resolved had 2+ flips at v6 — to fix at formal cycle.)*
 
-> **Checkpoint 0d**: Skill v1 (or v2) passes thresholds. Phase 0 gate cleared. *(provisionally cleared on capture + adversarial; planning gate pending formal cycle)*
+> **Checkpoint 0d**: Skill v1 (or v2) passes thresholds. Phase 0 gate cleared. *(provisionally cleared on capture + adversarial; planning gate pending Phase 0d formal cycle on full corpus + Phase 1 runtime gates)*
 
 ### Triage learnings worth keeping (carry into formal cycle)
 
@@ -163,7 +165,8 @@ Same skill rule implicated in ≥3 still-failing scenarios = categorical-refusal
 - **MAX_TURNS=30** is needed for planning scenarios with 8+ items (15 too tight; SDK's `num_turns` includes tool sub-calls). Already in `packages/evals/src/runScenario.ts`.
 - **Adversarial reason matching uses OR semantics** (any-of), not AND (all-of) — model wording varies; list 4–7 anchors per scenario. Already in `packages/evals/src/score.ts` and `core/golden-set/SCENARIO_FORMAT.md`.
 - **Don't use `src/billing/` as a "neutral" path in scenarios** — it's a categorical refusal (rule #5: payment/billing). Same caveat for `src/auth/`, `migrations/`, `crypto`, `__generated__/`, `.github/workflows/`, lockfiles. Use `src/services/`, `src/api/`, `src/lib/` for neutral paths.
-- **Per-API-account credit is the practical bound on a single eval run** — tier-1 30K-input-tok-per-min hits a 429 wall fast at workers=5; back off to workers=3 + retry-on-429 (already in harness). Cost-per-19-scenario is ~$2–4.
+- **Per-API-account credit is the practical bound on a single API eval run** — tier-1 30K-input-tok-per-min hits a 429 wall fast at workers=5; back off to workers=3 + retry-on-429 (already in harness). Cost-per-19-scenario is ~$2–4 on API. **As of commit `0629915`, the harness uses Claude Code subscription auth by default — `$0` per run** (see decision #19). Set `ANTHROPIC_API_KEY` in the shell env to fall back to API billing for CI.
+- **Iteration ceiling is real around v6** — see decision #20. Don't try iteration #4 in the same vein (more worked-example tweaks, more force-serial output, more rule-list inlining); the data shows diminishing returns. The right next move on planning failures is Phase 1's runtime gates (`permissions.deny` + disposition prompt).
 
 ---
 
