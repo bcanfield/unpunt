@@ -1,0 +1,6 @@
+{
+  "name": "un-punt",
+  "version": "0.1.0",
+  "description": "Captures deferrals during agent work, proposes verified cleanup passes at wrap-up.",
+  "skills": "skills/"
+}

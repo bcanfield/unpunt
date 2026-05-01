@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status)",
+      "Bash(git rev-parse *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git branch *)",
+      "Bash(rg *)",
+      "Bash(sha256sum *)",
+      "Bash(shasum *)",
+      "Bash(lstat *)",
+      "Bash(realpath *)",
+      "Read(.un-punt/**)",
+      "Write(.un-punt/**)",
+      "Edit(.un-punt/**)"
+    ],
+    "ask": ["Bash(git commit *)", "Bash(git reset *)", "Bash(git checkout *)"],
+    "deny": [
+      "Bash(git push *)",
+      "Read(.env*)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(**/*_secret*)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(nc *)"
+    ]
+  }
+}

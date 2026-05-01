@@ -1,0 +1,19 @@
+{
+  "name": "un-punt",
+  "owner": {
+    "name": "Brandin Canfield",
+    "url": "https://github.com/bcanfield"
+  },
+  "description": "un-punt — capture deferrals during agent work, finish them on a verified cleanup pass at wrap-up.",
+  "plugins": [
+    {
+      "name": "un-punt",
+      "description": "Captures deferrals (TODOs, `as any`, skipped tests, swallowed exceptions, chat-form 'I'll handle this later') into `.un-punt/items/*.md` as you work, then proposes verified cleanup passes at wrap-up under a Refuse > Flag > Fix trust contract.",
+      "version": "0.1.0",
+      "source": {
+        "source": "path",
+        "path": "adapters/claude-code"
+      }
+    }
+  ]
+}
