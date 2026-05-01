@@ -244,7 +244,20 @@ When the user accepts a sweep:
 4. **Categorize each item:**
    - **Fix-eligible** — confidence ≥ contract threshold for that type AND not in any refusal category
    - **Flag-eligible** — confidence < threshold, OR partial pre-flight pass, OR contract asks to flag-only this type
-   - **Refused** — matches a categorical refusal (see [`reference/refusal-lists.md`](reference/refusal-lists.md)). Record which rule fired.
+   - **Refused** — matches a categorical refusal. Record which rule fired by number. **Check the item's `file:` path against this inline list before deciding fix vs flag — categorical refusals override confidence:**
+     - **rule 1** public APIs (exported types in `index.*` / barrels / published-package surfaces)
+     - **rule 2** DB migrations & schema (`migrations/`, `*.sql`, ORM schema files)
+     - **rule 3** auth/authorization (`auth/`, `oauth/`, `permission/`, `acl/`, `rbac/`, `policy/`)
+     - **rule 4** cryptography (paths/symbols matching `crypto`, `subtle`, `webcrypto`, signing, encryption, KDF, HMAC)
+     - **rule 5** payment/billing (`billing/`, `payment/`, `checkout/`, `invoice/`)
+     - **rule 6** CI/CD config (`.github/workflows/`, `Dockerfile`, `docker-compose*`, `.gitlab-ci.yml`, `Jenkinsfile`, `.circleci/`)
+     - **rule 7** lockfiles (`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `Cargo.lock`, `Gemfile.lock`, `poetry.lock`, `uv.lock`, `go.sum`)
+     - **rule 8** generated code (`@generated` in body, paths under `gen/`, `generated/`, `__generated__/`, `.generated/`)
+     - **rule 9** test deletion (any item asking to remove or `.skip` an existing test)
+     - **rule 10** cross-module refactors (item's `## Why deferred` body explicitly mentions multiple top-level dirs of `src/` or coordinated changes across packages)
+     - **rule 11** files modified by humans in last 24h (per the hardened detection in [`reference/refusal-lists.md`](reference/refusal-lists.md) — `%cE` + GPG sig on high-risk paths + AuthorDate/CommitterDate skew)
+     - **rule 12** `.gitignore`-excluded paths (`git check-ignore` reports as ignored)
+   - For the full detection algorithms (especially the 24h-human-touch and cross-module rules), see [`reference/refusal-lists.md`](reference/refusal-lists.md). The path-pattern checks above are sufficient for most planning decisions.
 5. **Rank fix-eligible by confidence (descending).** Tiebreak via your own judgment of locality and test coverage.
 6. **Cap at N fixes (default 5) and M flags (default 10)** — read from `contract.md` `caps:`.
 7. **Compute sweep id**: `<YYYY-MM-DD>-<scope-slug>`. If `.un-punt/sweeps/<id>/` exists, append `-2`, `-3`, … until unique.
@@ -252,6 +265,10 @@ When the user accepts a sweep:
 9. **Show the plan; ask for confirmation.**
 
 **Planning is deterministic** — same input items + same contract = same plan. No randomness.
+
+**Categorization is by confidence + categorical refusals only — NOT by verifier presence.** Verifier discovery is an *execution-time* concern (next section). At planning time, list fix-eligible items in the `## Fix` bucket even if no `package.json` or `tsconfig.json` is visible yet — execution will degrade those items to flag if a safe verifier turns out to be unavailable, and `report.md` will surface the degradation. If you preemptively put fix-eligible items in `## Flag` because no verifier is visible, you've conflated planning with execution and the user can't see what *would* have been fixed.
+
+If you want to warn the user at planning time about missing verifier infrastructure, do it in chat alongside the plan ("heads up — no `package.json` test script visible; if you proceed, all 3 fix items will degrade to flag at execution"). Don't pre-degrade in the plan itself.
 
 ---
 
@@ -279,13 +296,13 @@ Look for a runnable verifier in this order. **Vet every candidate** before using
 2. **Common binaries on PATH**: `tsc --noEmit`, `eslint`, `pytest`, `cargo test`, `go test ./...`, `cargo clippy`.
 3. **Neither produces a runnable command** → enter **FLAG-only mode** for the rest of the sweep.
 
-### FLAG-only mode (verifier failure is user-visible)
+### FLAG-only mode (execution-time degradation, user-visible)
 
-When no safe verifier is available, **don't pretend FLAG-only is success**. Demote every fix-eligible item to flag, write them all into the `## Flag` section of `plan.md`, and surface in `report.md`:
+FLAG-only mode is an **execution-time** state — entered when verifier discovery (during sweep execution, not planning) finds no safe verifier. When triggered: stop attempting fixes for the rest of this sweep; demote each remaining fix-eligible item to flag in `report.md` (not `plan.md` — the plan still reflects what would have been fixed); surface the degradation explicitly:
 
 > *No verifier found in this repo (`<reason>`); switched to FLAG-only mode — every item surfaced as a flag instead of a fix.*
 
-This is a deliberate degradation, not a fallback.
+This is a deliberate degradation, not a fallback. The user should see what *would* have been fixed (in `plan.md`'s Fix bucket) AND that nothing actually got fixed (in `report.md`'s degraded outcome).
 
 ### The two-receipt rule
 

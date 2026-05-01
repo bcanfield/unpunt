@@ -6,7 +6,7 @@ fixture:
     src/auth/oauth.ts: |
       // TODO: tighten this
       export const x = 1;
-    src/billing/invoice.ts: |
+    src/services/invoice.ts: |
       // TODO: currency
       export const x = 1;
     src/api/users.ts: |
@@ -24,7 +24,7 @@ fixture:
       status: open
     - id: up-bbbb2222
       type: deferred-implementation
-      file: src/billing/invoice.ts
+      file: src/services/invoice.ts
       line: 3
       confidence: 0.88
       status: open

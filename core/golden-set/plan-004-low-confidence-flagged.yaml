@@ -3,7 +3,7 @@ category: planning
 description: 4 items, one below default confidence floor (0.55 type-loosened, default ≥0.80). Below-threshold items demote to flag, not fix.
 fixture:
   files:
-    src/billing/invoice.ts: |
+    src/services/invoice.ts: |
       // TODO: currency
       export const x = 1;
     src/api/users.ts: |
@@ -18,7 +18,7 @@ fixture:
   items:
     - id: up-dddd1111
       type: deferred-implementation
-      file: src/billing/invoice.ts
+      file: src/services/invoice.ts
       line: 3
       confidence: 0.92
       status: open

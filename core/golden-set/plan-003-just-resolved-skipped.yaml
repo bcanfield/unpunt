@@ -3,7 +3,7 @@ category: planning
 description: 4 items; one with status=resolved must NOT appear in any plan bucket. Tests that the planner reads frontmatter status and skips non-open items.
 fixture:
   files:
-    src/billing/invoice.ts: |
+    src/services/invoice.ts: |
       // TODO: currency
       export const x = 1;
     src/api/users.ts: |
@@ -15,7 +15,7 @@ fixture:
   items:
     - id: up-cccc1111
       type: deferred-implementation
-      file: src/billing/invoice.ts
+      file: src/services/invoice.ts
       line: 3
       confidence: 0.92
       status: open

@@ -3,7 +3,7 @@ category: planning
 description: 8 high-confidence items, default cap=5 → expect top 5 by confidence in fix bucket; remaining 3 in flag bucket.
 fixture:
   files:
-    src/billing/invoice.ts: |
+    src/services/invoice.ts: |
       // TODO: handle currency conversion
       export const x = 1;
     src/api/users.ts: |
@@ -30,7 +30,7 @@ fixture:
   items:
     - id: up-aaaa1111
       type: deferred-implementation
-      file: src/billing/invoice.ts
+      file: src/services/invoice.ts
       line: 3
       confidence: 0.95
       status: open

@@ -22,6 +22,7 @@ interface RunOpts {
   maxCostPerScenario: number;
   maxTotalCost: number;
   versionTag?: string;
+  keepTmp?: boolean;
 }
 
 const cli = cac("un-punt-evals");
@@ -32,6 +33,7 @@ cli
   .option("--max-cost-per-scenario <usd>", "Per-scenario abort threshold", { default: 1 })
   .option("--max-total-cost <usd>", "Whole-run abort threshold", { default: 25 })
   .option("--version-tag <v>", "Skill version label in the report")
+  .option("--keep-tmp", "Don't rm -rf tmp dirs after each run; print paths")
   .action(async (opts) => {
     const scenarios = await loadAllScenarios();
     await runAndReport(scenarios, normalizeOpts(opts));
@@ -42,6 +44,7 @@ cli
   .option("--max-cost-per-scenario <usd>", "Per-scenario abort threshold", { default: 1 })
   .option("--max-total-cost <usd>", "Whole-run abort threshold", { default: 25 })
   .option("--version-tag <v>", "Skill version label in the report")
+  .option("--keep-tmp", "Don't rm -rf the tmp dir after run; print path")
   .action(async (id: string, opts) => {
     const scenarios = (await loadAllScenarios()).filter((s) => s.id === id);
     if (scenarios.length === 0) {
@@ -57,6 +60,7 @@ cli
   .option("--max-cost-per-scenario <usd>", "Per-scenario abort threshold", { default: 1 })
   .option("--max-total-cost <usd>", "Whole-run abort threshold", { default: 25 })
   .option("--version-tag <v>", "Skill version label in the report")
+  .option("--keep-tmp", "Don't rm -rf tmp dirs after each run; print paths")
   .action(async (name: string, opts) => {
     const valid = ["capture", "non-capture", "adversarial", "planning"];
     if (!valid.includes(name)) {
@@ -101,6 +105,7 @@ function normalizeOpts(opts: Record<string, unknown>): RunOpts {
     maxCostPerScenario: Number(opts.maxCostPerScenario ?? 1),
     maxTotalCost: Number(opts.maxTotalCost ?? 25),
     versionTag: opts.versionTag ? String(opts.versionTag) : undefined,
+    keepTmp: Boolean(opts.keepTmp),
   };
 }
 
@@ -155,7 +160,10 @@ async function runAndReport(scenarios: Scenario[], opts: RunOpts): Promise<void>
       const i = cursor++;
       const sc = scenarios[i];
       if (!sc) return;
-      const result = await runScenario(sc, { maxCostPerScenario: opts.maxCostPerScenario });
+      const result = await runScenario(sc, {
+        maxCostPerScenario: opts.maxCostPerScenario,
+        keepTmp: opts.keepTmp,
+      });
       if (result.snapshot && result.status === "ok") {
         result.score = scoreScenario(sc, result.snapshot);
       }

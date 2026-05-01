@@ -304,6 +304,23 @@ Marketing can still use debt-related language for the eng-leader narrative ("the
 
 ---
 
+## 18. Verifier discovery is execution-time, not planning-time
+
+**Chose**: Sweep planning categorizes items by *confidence + categorical refusals only*. Verifier discovery (looking for `package.json` test scripts, `tsc`, etc.) and FLAG-only mode are execution-time concerns. The plan listed in `plan.md` reflects what *would* be fixed; the actual execution-time degradation (if verifier turns out unavailable) is recorded in `report.md`.
+
+**Alternatives**:
+- *Pre-degrade at planning time*: detect missing verifier upfront and put fix-eligible items in the Flag bucket of `plan.md`. The user sees one consistent view of "what will happen".
+- *Always require a verifier before planning at all*: refuse to plan if no verifier exists, force the user to add one first.
+
+**Why**:
+- **Honesty about what was planned vs what was executed.** If `plan.md` already pre-degrades, the user can't see what the skill *would* have attempted given a working verifier — they only see the degraded outcome. Splitting concerns lets the user diff "intended" vs "executed" and decide whether to add a verifier and re-run.
+- **Phase 0d eval evidence**: when planning was ambiguous about verifier-discovery timing, identical scenarios produced different `plan.md` contents (some pre-degraded, some didn't), making the eval flap on sampling noise alone. Forcing planning to be verifier-agnostic eliminates that variance.
+- **Matches the spec's section split**: `SKILL.body.md` / `05-skill-brief.md` cover Sweep planning §3 and Sweep execution §4 separately; verifier rules live under §4. Pre-degrading at planning time conflates the two phases.
+
+**Tradeoff**: a user reviewing only `plan.md` (without reading `report.md`) might think "the skill plans to fix these 3 items" when the actual outcome will be flag-only. Mitigated by the skill's planning-time chat warning ("heads up — no `package.json` test script visible; if you proceed, all 3 fix items will degrade to flag at execution"). The skill body's Sweep planning section now states this explicitly.
+
+---
+
 ## When NOT to apply these decisions
 
 Reconsider if:

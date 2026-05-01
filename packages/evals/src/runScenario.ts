@@ -1,4 +1,4 @@
-import { readdir, readFile } from "node:fs/promises";
+import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { query } from "@anthropic-ai/claude-agent-sdk";
 import { seedSkill, setupTmpRepo, teardown } from "./fixtures.js";
@@ -11,21 +11,32 @@ import type {
 } from "./types.js";
 
 const MODEL = "claude-sonnet-4-5";
-const MAX_TURNS = 10;
+// Bumped from spec's 10 → 30: SDK's num_turns counts tool sub-calls, so
+// realistic planning sessions on 8-item fixtures see 20-30 turns. Real
+// sessions are unbounded; the eval bounds cost via maxCostPerScenario
+// (default $1 — actual scenarios run $0.20-0.30).
+const MAX_TURNS = 30;
 const ALLOWED_TOOLS = ["Edit", "Write", "Bash", "Read", "Glob", "Skill"];
 
 export interface RunOptions {
   maxCostPerScenario: number;
+  /**
+   * If true, do not rm -rf the tmp dir at the end. Used by `--keep-tmp` to
+   * inspect post-run state. The harness logs the tmp dir path so the user
+   * can find it after the run.
+   */
+  keepTmp?: boolean;
+  /**
+   * Number of retries on rate-limit (HTTP 429). Default 3. Backoff is
+   * 30s × 2^attempt.
+   */
+  rateLimitRetries?: number;
 }
 
 export async function runScenario(scenario: Scenario, opts: RunOptions): Promise<ScenarioResult> {
   const start = Date.now();
   let tmpDir: string | undefined;
-  let cost = 0;
-  let numTurns = 0;
-  let inputTokens = 0;
-  let outputTokens = 0;
-  const assistantTexts: string[] = [];
+  const maxRetries = opts.rateLimitRetries ?? 3;
 
   try {
     tmpDir = await setupTmpRepo(scenario);
@@ -33,76 +44,170 @@ export async function runScenario(scenario: Scenario, opts: RunOptions): Promise
 
     const prompt = buildPrompt(scenario);
 
-    const session = query({
-      prompt,
-      options: {
-        cwd: tmpDir,
-        settingSources: ["project"],
-        allowedTools: ALLOWED_TOOLS,
-        permissionMode: "dontAsk",
-        maxTurns: MAX_TURNS,
-        model: MODEL,
-        ...(scenario.fixture.env ? { env: scenario.fixture.env } : {}),
-      },
-    });
+    // Merge fixture.env on top of process.env — replacing it would strip
+    // ANTHROPIC_API_KEY and the SDK would fail with "Not logged in".
+    const mergedEnv = scenario.fixture.env
+      ? { ...process.env, ...scenario.fixture.env }
+      : undefined;
 
-    for await (const msg of session) {
-      if (msg.type === "assistant") {
-        for (const block of msg.message.content) {
-          if (block.type === "text") assistantTexts.push(block.text);
+    let attempt = 0;
+    let lastError: Error | undefined;
+    while (attempt <= maxRetries) {
+      const collectedChat: string[] = [];
+      try {
+        const result = await driveSession(
+          scenario,
+          tmpDir,
+          prompt,
+          mergedEnv,
+          opts,
+          start,
+          collectedChat,
+        );
+        if (opts.keepTmp) {
+          await writeFile(join(tmpDir, "_agent_chat.txt"), collectedChat.join("\n\n"));
+          await writeFile(join(tmpDir, "_prompt.txt"), prompt);
+          console.log(`[keep-tmp] ${scenario.id}: ${tmpDir}`);
         }
-      } else if (msg.type === "result") {
-        cost = msg.total_cost_usd;
-        numTurns = msg.num_turns;
-        inputTokens = msg.usage.input_tokens ?? 0;
-        outputTokens = msg.usage.output_tokens ?? 0;
-        if (cost > opts.maxCostPerScenario) {
-          return {
-            scenario_id: scenario.id,
-            category: scenario.category,
-            language: scenario.language,
-            status: "aborted_cost_cap",
-            cost_usd: cost,
-            num_turns: numTurns,
-            duration_ms: Date.now() - start,
-            input_tokens: inputTokens,
-            output_tokens: outputTokens,
-            error: `cost ${cost.toFixed(4)} exceeded cap ${opts.maxCostPerScenario}`,
-          };
+        return result;
+      } catch (err) {
+        if (opts.keepTmp && tmpDir) {
+          await writeFile(join(tmpDir, "_agent_chat.txt"), collectedChat.join("\n\n"));
+          await writeFile(join(tmpDir, "_prompt.txt"), prompt);
+          console.log(`[keep-tmp] ${scenario.id}: ${tmpDir} (errored)`);
         }
+        lastError = err instanceof Error ? err : new Error(String(err));
+        if (!isRateLimitError(lastError) || attempt === maxRetries) break;
+        const backoffMs = 30_000 * 2 ** attempt;
+        console.warn(
+          `${scenario.id}: rate-limited (attempt ${attempt + 1}/${maxRetries + 1}); sleeping ${backoffMs / 1000}s`,
+        );
+        await sleep(backoffMs);
+        attempt++;
       }
     }
 
-    const snapshot = await snapshotUnPunt(tmpDir, assistantTexts.join("\n\n"));
-
     return {
       scenario_id: scenario.id,
       category: scenario.category,
       language: scenario.language,
       status: "ok",
-      cost_usd: cost,
-      num_turns: numTurns,
+      cost_usd: 0,
+      num_turns: 0,
       duration_ms: Date.now() - start,
-      input_tokens: inputTokens,
-      output_tokens: outputTokens,
-      snapshot,
-    };
-  } catch (err) {
-    return {
-      scenario_id: scenario.id,
-      category: scenario.category,
-      language: scenario.language,
-      status: "ok",
-      cost_usd: cost,
-      num_turns: numTurns,
-      duration_ms: Date.now() - start,
-      input_tokens: inputTokens,
-      output_tokens: outputTokens,
-      error: err instanceof Error ? err.message : String(err),
+      input_tokens: 0,
+      output_tokens: 0,
+      error: lastError?.message ?? "unknown error",
     };
   } finally {
-    if (tmpDir) await teardown(tmpDir);
+    if (tmpDir && !opts.keepTmp) await teardown(tmpDir);
   }
+}
+
+async function driveSession(
+  scenario: Scenario,
+  tmpDir: string,
+  prompt: string,
+  mergedEnv: Record<string, string | undefined> | undefined,
+  opts: RunOptions,
+  start: number,
+  collectedChat: string[],
+): Promise<ScenarioResult> {
+  let cost = 0;
+  let numTurns = 0;
+  let inputTokens = 0;
+  let outputTokens = 0;
+  const assistantTexts: string[] = collectedChat;
+
+  const session = query({
+    prompt,
+    options: {
+      cwd: tmpDir,
+      settingSources: ["project"],
+      allowedTools: ALLOWED_TOOLS,
+      permissionMode: "dontAsk",
+      maxTurns: MAX_TURNS,
+      model: MODEL,
+      ...(mergedEnv ? { env: mergedEnv } : {}),
+    },
+  });
+
+  for await (const msg of session) {
+    if (msg.type === "assistant") {
+      for (const block of msg.message.content) {
+        if (block.type === "text") assistantTexts.push(block.text);
+      }
+    } else if (msg.type === "result") {
+      cost = msg.total_cost_usd;
+      numTurns = msg.num_turns;
+      inputTokens = msg.usage.input_tokens ?? 0;
+      outputTokens = msg.usage.output_tokens ?? 0;
+      if (msg.subtype !== "success") {
+        // SDK returned an error result. If it's a rate-limit, throw so the
+        // outer loop can retry. Other errors propagate as a failed scenario
+        // (no retry — would burn budget on the same failure).
+        const errMsg = msg.errors?.join("; ") ?? `SDK error: ${msg.subtype}`;
+        if (isRateLimitMessage(errMsg)) {
+          throw new RateLimitError(errMsg);
+        }
+        return {
+          scenario_id: scenario.id,
+          category: scenario.category,
+          language: scenario.language,
+          status: "ok",
+          cost_usd: cost,
+          num_turns: numTurns,
+          duration_ms: Date.now() - start,
+          input_tokens: inputTokens,
+          output_tokens: outputTokens,
+          error: errMsg,
+        };
+      }
+      if (cost > opts.maxCostPerScenario) {
+        return {
+          scenario_id: scenario.id,
+          category: scenario.category,
+          language: scenario.language,
+          status: "aborted_cost_cap",
+          cost_usd: cost,
+          num_turns: numTurns,
+          duration_ms: Date.now() - start,
+          input_tokens: inputTokens,
+          output_tokens: outputTokens,
+          error: `cost ${cost.toFixed(4)} exceeded cap ${opts.maxCostPerScenario}`,
+        };
+      }
+    }
+  }
+
+  const snapshot = await snapshotUnPunt(tmpDir, assistantTexts.join("\n\n"));
+
+  return {
+    scenario_id: scenario.id,
+    category: scenario.category,
+    language: scenario.language,
+    status: "ok",
+    cost_usd: cost,
+    num_turns: numTurns,
+    duration_ms: Date.now() - start,
+    input_tokens: inputTokens,
+    output_tokens: outputTokens,
+    snapshot,
+  };
+}
+
+class RateLimitError extends Error {}
+
+function isRateLimitError(err: Error): boolean {
+  return err instanceof RateLimitError || isRateLimitMessage(err.message);
+}
+
+function isRateLimitMessage(msg: string): boolean {
+  return /\b429\b|rate.?limit|rate_limit/i.test(msg);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
 }
 
 function buildPrompt(scenario: Scenario): string {
