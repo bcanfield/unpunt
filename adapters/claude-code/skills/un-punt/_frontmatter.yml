@@ -1,0 +1,5 @@
+---
+name: un-punt
+description: Use this skill to silently capture deferrals (TODO, FIXME, HACK, `as any`, `@ts-ignore`, `.skip`, `xit`, swallowed exceptions, "I'll handle later" chat moments) into `.un-punt/items/*.md` files during normal coding work, and to offer a small, verified, scoped cleanup pass when the user signals end-of-feature ("done", "looks good", "ship it", "wrap up"), switches areas, or types `/un-punt`. Trigger silently and continuously every time the user or agent defers, skips, loosens a type, or leaves a TODO; trigger again at wrap-up moments. Enforces a "Refuse > Flag > Fix" trust contract — categorical refusals for auth, crypto, payments, migrations, lockfiles, generated code; verifier-passes-or-flag-only; a 4-option disposition prompt that gates every commit on the user's current branch. Do NOT trigger for stylistic refactors, formatter passes, or PR review work — those are separate concerns.
+---
+

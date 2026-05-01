@@ -84,7 +84,7 @@ we touch the auth refresh flow next.
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
-| `id` | string | yes | `w-` + 8-char content hash (see ID derivation) |
+| `id` | string | yes | `up-` + 8-char content hash (see ID derivation) |
 | `type` | enum | yes | One of 6 types (below) |
 | `status` | enum | yes | `open`, `planned`, `resolved`, `dismissed` |
 | `file` | string | yes | Repo-relative path |
