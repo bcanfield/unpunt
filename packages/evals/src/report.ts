@@ -288,7 +288,9 @@ export function renderReportMarkdown(report: ReportEntry): string {
   lines.push(`- Calibration ECE:         ${a.calibration_ece.toFixed(3)}`);
   lines.push(`- Per-language recall:     ${formatPerLang(a.per_language_recall)}`);
   lines.push(`- Planning:                ${a.planning_score.toFixed(2)}`);
-  lines.push(`- Cost:                    $${a.cost_usd.toFixed(2)}`);
+  lines.push(
+    `- Token cost (est.):       $${a.cost_usd.toFixed(2)}  *(informational; not billed if running on Claude Code subscription)*`,
+  );
   lines.push(`- Wall time:               ${formatDuration(a.wall_time_ms)}`);
   lines.push(`- Verdict:                 **${a.verdict.replace("_", "-")}**`);
   lines.push("");

@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 import { readdir, readFile } from "node:fs/promises";
-import { basename, join, resolve } from "node:path";
+import { basename, join } from "node:path";
 import { cac } from "cac";
 import chalk from "chalk";
-import { config as loadDotenv } from "dotenv";
 import yaml from "js-yaml";
 import { REPO_ROOT } from "./fixtures.js";
 import { buildReport, renderReportMarkdown, writeReportFile } from "./report.js";
@@ -11,8 +10,10 @@ import { runScenario } from "./runScenario.js";
 import { scoreScenario } from "./score.js";
 import type { Scenario, ScenarioResult } from "./types.js";
 
-// Load env from <repo-root>/.env (does not override existing process.env values).
-loadDotenv({ path: resolve(REPO_ROOT, ".env"), quiet: true });
+// Auth: the harness uses your Claude Code subscription via OAuth (run
+// `claude /login` once if you haven't). If `ANTHROPIC_API_KEY` is set in
+// your shell env, the SDK will use that instead — useful for CI but not
+// the default path.
 
 const SCENARIO_DIR = join(REPO_ROOT, "core", "golden-set");
 const REPORT_DIR = join(REPO_ROOT, "packages", "evals", "reports");
@@ -217,5 +218,3 @@ async function nextVersionTag(): Promise<string> {
     return "v1";
   }
 }
-
-export { resolve };

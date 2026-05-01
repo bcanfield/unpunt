@@ -55,7 +55,7 @@ This is the operational version of [`06-build-plan.md`](06-build-plan.md). Read 
 
 ## Phase 0b — Eval harness (~2 days; parallelize with 0a) — **DONE** (commit `8255a17`)
 
-- [x] `cd packages/evals && pnpm init`; add deps: `@anthropic-ai/claude-agent-sdk`, `js-yaml`, `cac`, `chalk`, `tsx`, `typescript`. *(also added `dotenv` for `.env` loading)*
+- [x] `cd packages/evals && pnpm init`; add deps: `@anthropic-ai/claude-agent-sdk`, `js-yaml`, `cac`, `chalk`, `tsx`, `typescript`. *(harness uses Claude Code subscription auth via OAuth — no API-key setup required; see decision #19)*
 - [x] Add `tsconfig.json` (strict, target ES2022, ESM).
 - [x] Write `src/types.ts` — `Scenario`, `ExpectedItem`, `ScenarioResult`, `ReportEntry`.
 - [x] Write `src/fixtures.ts`:

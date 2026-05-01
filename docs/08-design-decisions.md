@@ -321,6 +321,25 @@ Marketing can still use debt-related language for the eng-leader narrative ("the
 
 ---
 
+## 19. Eval harness assumes Claude Code subscription auth (API key is invisible fallback)
+
+**Chose**: `packages/evals/` does no auth setup of its own. The Claude Agent SDK reads OAuth credentials from the user's existing Claude Code login (`claude /login`); if `ANTHROPIC_API_KEY` is set in the user's shell env, the SDK silently uses that instead. No `dotenv`, no `.env.example`, no flag.
+
+**Alternatives**:
+- *API-key primary with `.env` loading via `dotenv`*: previous state. Required `.env` setup, exposed users to surprise API bills, polluted the package with an auth-config dep.
+- *Two flags, two modes (`--use-claude-subscription` + `--use-api-key`)*: explicit but adds CLI surface area for a binary choice the SDK already handles.
+- *Detect-and-warn at startup*: probe `~/.claude/auth.json` and `process.env.ANTHROPIC_API_KEY`, print which mode is active. The SDK's own error messages already do this clearly enough; redundant.
+
+**Why**:
+- **un-punt is a Claude Code plugin.** Every dev running the evals already has Claude Code installed and (almost certainly) a subscription. Asking them to *also* set up an API key + `.env` is friction without value.
+- **Eliminates accidental-spend risk.** During Phase 0d triage we burned ~$14 on API runs partly because dotenv made the API path frictionless. Subscription auth has a fixed monthly fee; can't be over-spent.
+- **The SDK's auth precedence (`ANTHROPIC_API_KEY` → OAuth) is exactly what we want.** Default = subscription (no setup). CI / Anthropic-internal = `export ANTHROPIC_API_KEY=...` works as a transparent override. Two paths, no harness code branching.
+- **Matches the eval's purpose.** Cost-tracking was useful in Phase 0d triage but isn't load-bearing. The SDK still reports `total_cost_usd` as a token-count proxy regardless of billing mode — informational either way.
+
+**Tradeoff**: CI eval runs need an API key (no OAuth flow in headless envs). Solved by the silent-fallback: any future CI workflow just does `export ANTHROPIC_API_KEY=...` before `pnpm --filter @un-punt/evals run all`. Cost reporting is misleading on subscription (shows "$X estimated" when nothing was actually charged) — the report header now labels it `Token cost (est.)` with a footnote to clarify.
+
+---
+
 ## When NOT to apply these decisions
 
 Reconsider if:

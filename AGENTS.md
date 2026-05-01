@@ -18,6 +18,8 @@ pnpm · ESM · Node ≥20 · TS 6 · biome · vitest · tsup · cac
 ## Conventions
 ESM only. No tooling beyond Stack. Commit built `SKILL.md`; CI runs `pnpm build && git diff --exit-code`. Shared workspace devDeps go in `pnpm-workspace.yaml` `catalog:`, referenced as `"name": "catalog:"` from each package.
 
+**Eval auth**: `packages/evals/` runs against your Claude Code subscription via OAuth — `claude /login` once is the only setup. If `ANTHROPIC_API_KEY` is set in your shell env, the SDK uses that as a transparent fallback (CI / Anthropic-internal). Don't add `dotenv` back. See `docs/08-design-decisions.md` decision 19.
+
 ## After completing a task
 Three rules — apply each independently. Most tasks need none of them.
 

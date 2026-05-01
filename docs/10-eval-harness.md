@@ -406,6 +406,8 @@ Both caps are configurable via `--max-cost-per-scenario` and `--max-total-cost`.
 
 ## Running it
 
+**Auth.** The harness uses your Claude Code subscription via OAuth — run `claude /login` once if you haven't. No API key, no `.env` file, no setup. If `ANTHROPIC_API_KEY` is set in your shell env, the SDK will use that instead (useful for CI; not the default path). Per-scenario `total_cost_usd` is reported as an *estimate* of token cost in USD — informational only when authed via subscription, since you're not billed per-call.
+
 ```bash
 # First-time setup
 cd packages/evals
@@ -423,9 +425,12 @@ pnpm --filter @un-punt/evals run category capture
 
 # Custom worker count
 pnpm --filter @un-punt/evals run all --workers 10
+
+# Keep tmp dirs for inspection (no SDK changes)
+pnpm --filter @un-punt/evals run one cap-001 --keep-tmp
 ```
 
-Output: stdout summary + a fresh `evals/reports/v<n>-<timestamp>.md`.
+Output: stdout summary + a fresh `packages/evals/reports/v<n>-<timestamp>.md`.
 
 ---
 
