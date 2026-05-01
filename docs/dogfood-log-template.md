@@ -4,6 +4,8 @@ This template structures observations from real Claude Code sessions so they con
 
 **Goal**: 30 capture + 25 non-capture scenarios derived from 2 days of dogfooding on personal repos. (Adversarial 8 + planning 10 are spec-driven and already authored under `core/golden-set/adv-*.yaml` + `plan-*.yaml`.)
 
+**Working file**: `dogfood-log.md` at repo root (gitignored — keep your real session content local). This file (`docs/dogfood-log-template.md`) is the format spec; the working file is your scratchpad.
+
 ---
 
 ## Setup (one-time, per dogfood repo)
@@ -41,104 +43,76 @@ removes `~/.claude/skills/un-punt/` and reverses the `settings.json` additions (
 
 ---
 
-## Per-session log entry — copy and fill
+## What to record
 
+Two flat lists per day. That's it. Don't structure per-session — the cognitive overhead defeats the point of dogfood.
+
+The reason this is short: **un-punt's own `.un-punt/items/*.md` files self-document every successful capture.** I can enumerate them at end-of-dogfood and parse type, file, line, confidence, and `## Why deferred` text. The only signal I cannot get from un-punt's output alone is what un-punt **didn't** see (misses) or **shouldn't** have seen (false positives). Those are the only two things you need to write down.
+
+### Per-day shape
+
+```markdown
+## Day 1 — <repo-name> (<language>)
+
+### Misses
+(deferrals you made that un-punt did NOT capture — one bullet per)
+
+- <file>:<line> or <area> — what you said/did, why this should have been captured
+- pages/billing.tsx — said in chat "we should clean up the duplicate format calls" but no item written
+- src/auth/oauth.ts — added `// FIXME: refresh logic` after a Bash compile-error fix; un-punt missed it (maybe because it was added between two Edit calls?)
+
+### False positives
+(items un-punt captured that weren't real deferrals — one bullet per)
+
+- tests/fixtures/parser.test.ts:14 — captured `TODO` inside a string literal that's test fixture content
+- src/legacy/old-api.ts — captured an `as any` that has a comment explicitly justifying it ("type-narrowed at the boundary, this is correct")
+
+### Wrap-up behavior
+- Did the agent suggest a sweep at end-of-feature / area-switch / "looks good"? (yes / no / wrong moment)
+- Phrasing (concise / preachy / off-key)
+- Anything else surprising
+
+### Other notes
+- Anything that won't fit the categories above (UX surprises, install issues, things that broke)
 ```
-### YYYY-MM-DDTHH:MM — repo: <repo-name> — language: <ts|py|go|...>
 
-**Session summary** (1–3 sentences of what you were doing):
-<e.g. "Implementing OAuth refresh; user asked me to ship the happy path
-and tighten types later.">
-
-**Deferrals the agent emitted in chat or in code:**
-1. <e.g. "Wrote `as any` cast on line 142 of src/auth/oauth.ts to ship
-   without typing the discriminated response.">
-2. <…>
-
-**For each deferral — did un-punt capture it correctly?**
-| # | Captured? | Item file (if yes) | Notes |
-|---|---|---|---|
-| 1 | yes | up-7f3a2b1c.md | type=type-loosened, conf=0.87, why mentions grant_type ✓ |
-| 2 | NO  | — | Chat-only deferral ("we should come back to this") — agent didn't write item file |
-
-**False positives** (un-punt captured something it shouldn't have):
-- <e.g. "Captured a TODO inside a string literal in tests/fixtures/parse.test.ts">
-
-**Non-trivial signals worth a scenario:**
-- <e.g. "User said 'skip that test for now' verbally — the .skip went into the
-  code but the chat-only context wasn't preserved in the item.">
-```
+That's it. Repeat for Day 2 on a different repo.
 
 ---
 
-## Conversion checklist (turning a log entry into a YAML scenario)
+## Coverage targets — fill in at end-of-dogfood, not during
 
-For each captured deferral that should have been captured (whether un-punt got it right or not):
+Don't aim for these during the dogfood — that biases what you observe. At end-of-dogfood, I'll enumerate the captures un-punt actually wrote, cross-reference your misses + false-positives lists, and we'll see whether we hit:
 
-- [ ] Pick a category: `capture` (should capture) or `non-capture` (should NOT capture).
-- [ ] Pick an `id`: `cap-NNN-<short-slug>.yaml` or `nocap-NNN-<short-slug>.yaml`.
-- [ ] Trim the file content to a minimal reproduction (~5–20 lines is plenty).
-- [ ] Strip identifying details — repo names, real customer data, secrets.
-- [ ] Convert the conversation into 1–3 `turns:` entries (user → assistant). For assistant turns that did edits, add `tool_uses:` with the Edit/Write/Bash params.
-- [ ] Set `expected.items[]` to what un-punt **should have** captured (one entry per expected item). Use minimal `confidence_min` (e.g. 0.6) and `why_must_contain[]` of 1–3 anchor words from the deferral context.
-- [ ] For non-capture: list `forbidden_items[]` describing what un-punt should NOT capture.
-- [ ] Validate: `./packages/evals/run.sh validate`.
-
----
-
-## Coverage targets (per `docs/11-checklist.md` Phase 0c)
-
-### Capture scenarios — 30 total
-
-- [ ] All 6 item types represented (≥3 each):
-  - [ ] deferred-implementation (3+)
-  - [ ] type-loosened (3+)
-  - [ ] skipped-test (3+)
-  - [ ] hack-workaround (3+)
-  - [ ] duplicated-code (3+)
-  - [ ] other (3+)
-- [ ] ≥3 scenarios per language: TS, Python, Go, Rust, Java
-- [ ] ≥5 chat-only deferrals (no code comment — only said in chat)
-- [ ] ≥3 multi-deferral scenarios in one session
-
-### Non-capture scenarios — 25 total
-
-The first 6 are mandatory (per checklist):
-- [ ] TODO in markdown heading (e.g. `# TODO: refactor` in `README.md`)
-- [ ] TODO in string literal (`const sample = "// TODO: ..."`)
-- [ ] `as any` with explicit "trust me, I checked" justification
-- [ ] `.skip` with a linked external issue (e.g. `// .skip — see #123`)
-- [ ] Pattern in `.gitignore`-excluded path (vendor, node_modules)
-- [ ] Pattern in `__generated__/`
-
-Plus 19 more from real dogfood. The checklist hints:
-- TODO inside docstring code blocks
-- `.next/` build output
-- `xit` retired-test comments
-- Type-test fixtures with `as any`
-- `.pyi` stub `# type: ignore`
-- 14 from real repo audits (your dogfood will surface most of these)
+| Category | Target | Source |
+|---|---:|---|
+| capture (where un-punt got it right) | 30 | un-punt's own items + your "yes captured correctly" judgment |
+| non-capture (cases un-punt correctly didn't capture) | 25 | absence-of-item observations + the 6 mandatory non-capture shapes (TODO in markdown heading, in string literal, etc.) |
+| chat-only deferrals (≥5 of capture) | 5+ | from your misses list, plus instances un-punt did get |
+| each language has ≥3 scenarios | 3 each | which is why day-1 and day-2 should be different languages |
+| each item type has ≥3 scenarios | 3 each | derived from un-punt's captures + your judgments |
 
 ---
 
-## Tally as you go
+## What I do at end-of-dogfood
 
-| Category | Target | Authored |
-|---|---:|---:|
-| capture | 30 | 0 |
-| non-capture | 25 | 0 |
-| adversarial | 8 | 8 ✓ |
-| planning | 10 | 10 ✓ |
-| **total** | **73** | **18** |
+You hand me the filled-in `dogfood-log.md`. I:
 
-Update this table after each conversion pass.
+1. **Enumerate captures** by walking `find ~/<your-repos>/.un-punt/items -name '*.md'` and parsing the frontmatter. This produces "the things un-punt actually captured" automatically.
+2. **Cross-reference your misses + false-positives lists** to label each capture as expected, false-positive, or unrelated.
+3. **Generate `core/golden-set/cap-NNN.yaml`** for each clean capture (with PII / repo-specifics scrubbed) and `nocap-NNN.yaml` for each false-positive (so future skill versions don't repeat the mistake).
+4. **Generate `core/golden-set/cap-NNN.yaml`** for each miss (with the chat / code context that un-punt should have caught).
+5. **Validate the corpus** parses and stratifies (≥3/language, ≥5 chat-only, etc.).
+6. **Run formal Phase 0d eval** on the full ~73-corpus.
+
+You don't need to author any YAML.
 
 ---
 
-## Anti-patterns — don't do these
+## Anti-patterns
 
-- ❌ Inventing scenarios from scratch (the whole point is real misses → corpus)
-- ❌ Tweaking the corpus to hit the stage gates (per `docs/audits/07-validation-april-2026.md` and the `un-punt-implementation` skill rule)
-- ❌ Including PII / secrets in fixtures (strip before committing)
-- ❌ Multi-megabyte fixtures (≤20 lines per file is the target)
-- ❌ Non-deterministic fixture content (random IDs, timestamps in file content)
+- ❌ Trying to write a perfect log entry for every session. Bullets are fine.
+- ❌ Including PII / secrets in observations. The file is gitignored but err on the side of caution; describe rather than quote when the content is sensitive.
+- ❌ Aiming for the coverage targets *during* dogfood. Bias defeats the test.
+- ❌ Writing entries for un-punt's correct captures. They self-document via `.un-punt/items/`.
+- ❌ Multi-megabyte fixtures in your eventual scenario YAMLs (I'll handle that during conversion — keep ≤20 lines per file).
