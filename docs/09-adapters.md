@@ -286,7 +286,9 @@ The repo root contains `.claude-plugin/marketplace.json` declaring marketplace n
 
 The README's hero install command (`/plugin install un-punt@un-punt`) assumes the marketplace has already been added in the user's Claude Code session. The README's Install section spells out the marketplace-add step.
 
-Manual fallback (no marketplace at all): `git clone <repo> && cp -r adapters/claude-code/skills/un-punt ~/.claude/skills/`.
+Two non-marketplace paths also work as of commit `0738852`:
+- **CLI**: `./packages/cli/run.sh install claude-code` from a checkout. Copies the skill, merges permissions per §4.4.1, drops contract template into the current repo. `un-punt status` and `un-punt uninstall` round out the lifecycle.
+- **Pure manual fallback** (last resort): `git clone <repo> && cp -r adapters/claude-code/skills/un-punt ~/.claude/skills/`. No settings.json merge, no contract template — useful only for one-off testing.
 
 ### 4.6 CLAUDE.md fragment
 

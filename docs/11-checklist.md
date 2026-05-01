@@ -47,7 +47,7 @@ This is the operational version of [`06-build-plan.md`](06-build-plan.md). Read 
   - [x] Cold-start rule: "if `/un-punt` invoked AND `.un-punt/items/` empty → run inventory" (per [`05-skill-brief.md`](05-skill-brief.md) §8)
 - [x] Write `adapters/claude-code/skills/un-punt/_frontmatter.yml` — adapter-specific YAML head.
 - [x] Run `core/build.sh` → produces `adapters/claude-code/skills/un-punt/SKILL.md` (frontmatter + body).
-- [ ] Validate built artifact loads in Claude Code: `cp -r adapters/claude-code/skills/un-punt ~/.claude/skills/`; restart Claude Code; verify skill listed in `/skills`. *(user-driven; the harness loads the same artifact via SDK and the smoke test passed — separate verification path)*
+- [ ] Validate built artifact loads in Claude Code: `./packages/cli/run.sh install claude-code`; restart Claude Code; verify skill listed in `/skills`. *(user-driven; the harness loads the same artifact via SDK and the smoke test passed — separate verification path. CLI install came online in commit `0738852`.)*
 
 > **Checkpoint 0a**: A loadable Claude Code skill. Manual sanity check: invoke `/un-punt` in a scratch repo and observe it does the right opening move (cold-start offer).
 
@@ -193,21 +193,13 @@ Tests A2 ("agent produces safe diffs ≥80% of the time"); see [`07-risks-and-ev
 
 ---
 
-## Phase 1, Day 2 — Plugin manifest + skill placement + settings
+## Phase 1, Day 2 — Plugin manifest + skill placement + settings — **DONE** (commit `7b46bd0`)
 
-- [ ] Verify `core/build.sh` produces a valid `adapters/claude-code/skills/un-punt/SKILL.md`.
-- [ ] Write `adapters/claude-code/settings.json`:
-  ```json
-  {
-    "permissions": {
-      "allow": ["Bash(git status)", "Bash(git rev-parse *)", "Bash(rg *)", "Read(.un-punt/**)", "Write(.un-punt/**)", "Edit(.un-punt/**)"],
-      "ask":   ["Bash(git commit *)", "Bash(git reset *)", "Bash(git checkout *)"],
-      "deny":  ["Bash(git push *)", "Read(.env*)", "Read(**/*.pem)", "Read(**/*.key)", "Read(**/*_secret*)"]
-    }
-  }
-  ```
-- [ ] Write `adapters/claude-code/snippets/CLAUDE.md.fragment` (one paragraph users paste into project CLAUDE.md).
-- [ ] Confirm MVP form: ship as **standalone skill** (slash = `/un-punt`); no `.claude-plugin/plugin.json` unless Phase 0d shows description-match alone misses too much. See [`06-build-plan.md`](06-build-plan.md) ("If hooks become necessary") and [`09-adapters.md`](09-adapters.md) §4.1.
+- [x] Verify `core/build.sh` produces a valid `adapters/claude-code/skills/un-punt/SKILL.md`.
+- [x] Write `adapters/claude-code/settings.json`. *(13 allow / 3 ask / 8 deny per `docs/09-adapters.md` §4.4 verbatim, plus `Bash(shasum *)` for macOS portability.)*
+- [x] Write `adapters/claude-code/snippets/CLAUDE.md.fragment` (one paragraph users paste into project CLAUDE.md).
+- [x] **Bonus, ahead of original Day 6 scope**: also wrote `adapters/claude-code/.claude-plugin/plugin.json` and repo-root `.claude-plugin/marketplace.json` (self-hosted marketplace per `docs/09-adapters.md` §4.5; canonical schema verified via Claude Code docs research).
+- [x] Confirm MVP form: ship as **standalone skill** (slash = `/un-punt`); no `.claude-plugin/plugin.json` unless Phase 0d shows description-match alone misses too much. *(We DO ship plugin.json + marketplace.json now, so users can install via `/plugin marketplace add` — but the skill still auto-loads via description match, no hooks. The plugin manifest exists for distribution, not for hook attachment. Per `docs/09-adapters.md` §4.1 "MVP — no hooks reference".)*
 
 ---
 
@@ -243,30 +235,30 @@ Tests A2 ("agent produces safe diffs ≥80% of the time"); see [`07-risks-and-ev
 - [ ] Implement symlink-via-Bash containment for `.un-punt/items/*`: skill drives filesystem ops via `lstat` + `realpath` checked against the repo root, not via Edit/Write tools, on any path under `.un-punt/items/`.
 - [ ] Implement hardened 24h-human-touch check using `%cE` (committer email, not `%aE`) + GPG signature verification on high-risk paths + `--date` rewriting check.
 
-## Phase 1, Day 6 — Thin CLI + marketplace setup
+## Phase 1, Day 6 — Thin CLI + marketplace setup — **PARTIAL** (commit `0738852`; CLI implemented + smoke-tested locally; npm publish + marketplace E2E test still pending Phase 1 launch)
 
-- [ ] `cd cli && pnpm init`; add `cac` (or `commander`) and `chalk`.
-- [ ] Implement `un-punt install <platform>`:
-  - [ ] Detect Node ≥18; fail clearly otherwise.
-  - [ ] `mkdir -p ~/.claude/skills/un-punt`
-  - [ ] Copy `adapters/claude-code/skills/un-punt/*` → there.
-  - [ ] **Merge** `adapters/claude-code/settings.json` `permissions` block into `~/.claude/settings.json` (preserving existing `allow`/`ask`/`deny` arrays; deduplicate).
-  - [ ] Copy `core/skill/reference/contract-template.md` → `<cwd>/.un-punt/contract.md` if not present.
-  - [ ] Print success + 3-line "what's next" guidance.
-- [ ] Implement `un-punt status`:
-  - [ ] Count by status via `rg` over `.un-punt/items/`.
-  - [ ] Hot zones: top 3 directories by item count.
-  - [ ] Aging: oldest 3 `open` items by `created_at`.
-  - [ ] Print as a compact table.
-  - [ ] **`--share` flag**: prints local-only `sweep_count` per repo (read from `~/.config/un-punt/state.toml`) for users to paste into feedback. No network calls. (Resolves C12 / Phase 1 pass-criterion measurability — see [`06-build-plan.md`](06-build-plan.md) Phase 1 Pass.)
-- [ ] Implement `un-punt uninstall`:
-  - [ ] `rm -rf ~/.claude/skills/un-punt`.
-  - [ ] Reverse the `permissions.deny` additions in `~/.claude/settings.json`.
-  - [ ] **Leave `<cwd>/.un-punt/` intact** (user data; not ours to delete).
-  - [ ] Print confirmation.
-- [ ] Publish to npm as `un-punt` (or scoped `@un-punt/cli` if root name is taken).
-- [ ] Smoke test: `npx un-punt install claude-code` → verify install → use → `npx un-punt status` → `npx un-punt uninstall`.
-- [ ] **Marketplace setup**: write `.claude-plugin/marketplace.json` at repo root declaring marketplace `un-punt` with one plugin `un-punt` pointing at `adapters/claude-code/`. Test end-to-end: `/plugin marketplace add <org>/un-punt` → `/plugin install un-punt@un-punt` from a fresh Claude Code session.
+- [x] `cd packages/cli && pnpm init`; add `cac` and `chalk` (catalog-referenced). *(packages/cli was scaffolded earlier; deps already in place.)*
+- [x] Implement `un-punt install <platform>`:
+  - [x] Detect Node ≥18; fail clearly otherwise.
+  - [x] `mkdir -p ~/.claude/skills/un-punt`
+  - [x] Copy `adapters/claude-code/skills/un-punt/*` → there.
+  - [x] **Merge** `adapters/claude-code/settings.json` `permissions` block into `~/.claude/settings.json` (preserving existing `allow`/`ask`/`deny` arrays; deduplicate). *(Per `docs/09-adapters.md` §4.4.1 algorithm. Cumulative manifest at `~/.claude/un-punt-install.json` tracks ownership across re-installs.)*
+  - [x] Copy `core/skill/reference/contract-template.md` → `<cwd>/.un-punt/contract.md` if not present.
+  - [x] Print success + 3-line "what's next" guidance.
+- [x] Implement `un-punt status`:
+  - [x] Count by status via reading `.un-punt/items/*.md` frontmatter (no rg — pure Node).
+  - [x] Hot zones: top 3 directories by item count.
+  - [x] Aging: oldest 3 `open` items by `created_at`.
+  - [x] Print as a compact table.
+  - [x] **`--share` flag**: prints a paste-ready summary line. *(`sweep_count` from `~/.config/un-punt/state.toml` deferred — that file gets written by the actual sweep-execution work in this same Day 6 block, which is Phase 1 launch territory. For now `--share` reports counts by status, which is what the Day 7 second-sweep-rate survey actually needs.)*
+- [x] Implement `un-punt uninstall`:
+  - [x] `rm -rf ~/.claude/skills/un-punt`.
+  - [x] Reverse the `permissions.deny` additions in `~/.claude/settings.json`. *(All three buckets — allow + ask + deny — reversed precisely via the install manifest; user's pre-existing entries preserved.)*
+  - [x] **Leave `<cwd>/.un-punt/` intact** (user data; not ours to delete).
+  - [x] Print confirmation.
+- [ ] Publish to npm as `un-punt` (or scoped `@un-punt/cli` if root name is taken). *(Deferred to Phase 1 launch. Local install works via `./packages/cli/run.sh install claude-code`.)*
+- [x] Smoke test: install → verify install → use → status → uninstall. *(Smoke-tested locally with fake HOME/cwd; idempotent re-install verified; pre-existing user settings preserved through install + uninstall cycle. npm-publish smoke is the deferred bit.)*
+- [x] **Marketplace setup**: write `.claude-plugin/marketplace.json` at repo root declaring marketplace `un-punt` with one plugin `un-punt` pointing at `adapters/claude-code/`. *(Done in commit `7b46bd0`. End-to-end `/plugin marketplace add <org>/un-punt` → `/plugin install un-punt@un-punt` test deferred to Phase 1 launch — needs the repo to be on github first.)*
 
 ## Phase 1, Day 7 — B8 verification (NEW April 2026)
 

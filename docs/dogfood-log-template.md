@@ -6,27 +6,38 @@ This template structures observations from real Claude Code sessions so they con
 
 ---
 
-## Setup (one-time)
+## Setup (one-time, per dogfood repo)
 
-Install the built skill into your local Claude Code so it loads on every session:
-
-```bash
-mkdir -p ~/.claude/skills/un-punt
-cp -r adapters/claude-code/skills/un-punt/* ~/.claude/skills/un-punt/
-# Verify it loads:
-claude --print "/skills" 2>&1 | grep un-punt
-```
-
-The skill description matches against your prompts via Claude Code's auto-load. You should never need to type `/un-punt` for capture to happen — it's silent, automatic.
-
-In the repo you're dogfooding on, copy the contract template:
+From the un-punt repo:
 
 ```bash
-mkdir -p .un-punt
-cp <un-punt-repo>/core/skill/reference/contract-template.md .un-punt/contract.md
+pnpm install && ./core/build.sh   # build the skill artifact (one-time)
 ```
 
-`.un-punt/` is gitignored by default. Keep `~/.claude/skills/un-punt/` updated by re-running the cp after every Phase 0d skill iteration.
+Then `cd` into the repo you want to dogfood on and run the install CLI from the un-punt repo:
+
+```bash
+cd ~/path/to/your-personal-repo
+~/path/to/un-punt/packages/cli/run.sh install claude-code
+```
+
+That installs the skill into `~/.claude/skills/un-punt/`, merges un-punt's `permissions.{allow,ask,deny}` into your `~/.claude/settings.json` (preserving anything you already had — the runtime safety net per [`08-design-decisions.md`](08-design-decisions.md) decision #20), and copies `core/skill/reference/contract-template.md` into `<cwd>/.un-punt/contract.md`. Restart Claude Code (or open a new session) to load the skill.
+
+Verify with:
+
+```bash
+~/path/to/un-punt/packages/cli/run.sh status
+```
+
+If you iterate the skill body during dogfood (unlikely, but possible), re-run `install claude-code` to refresh the deployed copy. Re-installs are idempotent.
+
+When you're done dogfooding:
+
+```bash
+~/path/to/un-punt/packages/cli/run.sh uninstall
+```
+
+removes `~/.claude/skills/un-punt/` and reverses the `settings.json` additions (precisely — leaves your pre-existing entries intact via the `~/.claude/un-punt-install.json` manifest). Your `<cwd>/.un-punt/` is left intact (your data, not ours to delete).
 
 ---
 

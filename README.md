@@ -90,8 +90,19 @@ Coming in phase 2. Codex ships at parity (same skill body, different frontmatter
 
 ```bash
 git clone https://github.com/<org>/un-punt.git
-cp -r un-punt/adapters/claude-code/skills/un-punt ~/.claude/skills/
+cd un-punt && pnpm install && ./core/build.sh
+
+# install into your local Claude Code (run this from inside the repo
+# you want un-punt to track):
+cd ~/path/to/your/repo
+~/path/to/un-punt/packages/cli/run.sh install claude-code
+
+# uninstall later (precisely reverses what install added — your
+# pre-existing settings.json entries are preserved):
+~/path/to/un-punt/packages/cli/run.sh uninstall
 ```
+
+The `install` command merges un-punt's `permissions.{allow,ask,deny}` into your `~/.claude/settings.json`, copies the skill into `~/.claude/skills/un-punt/`, and drops a contract template into `<cwd>/.un-punt/contract.md`. Re-running `install` is idempotent.
 
 ### Verify
 

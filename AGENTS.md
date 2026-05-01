@@ -9,6 +9,10 @@ pnpm · ESM · Node ≥20 · TS 6 · biome · vitest · tsup · cac
 ## Commands
 `pnpm install` · `pnpm lint` · `pnpm format` · `pnpm typecheck` · `pnpm test` · `pnpm build`
 
+Per-package wrappers (build-on-stale + run):
+- `./packages/cli/run.sh install claude-code` · `status` · `uninstall` — install/manage the un-punt skill on the local machine
+- `./packages/evals/run.sh all` · `one <id>` · `category <name>` · `validate` — run the golden-set eval against the current skill build
+
 ## Layout
 - `core/` — skill source (`SKILL.body.md`, `reference/`, `snippets/`) + `golden-set/` scenarios + `build.sh`
 - `adapters/claude-code/` — built skill artifact + plugin manifest + settings
