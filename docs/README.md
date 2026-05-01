@@ -46,9 +46,9 @@ These aren't part of the read-in-order set, but they live alongside the docs and
 
 | Path | What it holds |
 |---|---|
-| [`repo-readme.md`](repo-readme.md) | First-pass draft of the eventual repo-root README. Written as if the product shipped (per the brief). The roadmap reflects a "pretend-shipped" state and must be reconciled with reality before public launch. |
-| [`assets/`](assets/) | Demo recording assets for `repo-readme.md`. `demo.tape` is the vhs script; `demo-session.sh` is the mock Claude Code session it drives; `demo.gif` is the rendered output. Render with `VHS_NO_SANDBOX=true vhs assets/demo.tape` from this directory. |
-| [`audits/`](audits/) | The 6-pass audit cycle on `repo-readme.md` — truth (`01`), coverage (`02`), inclusion (`03`), persona walkthrough (`04`), form (`05`), synthesis (`06`). Plus the **April 2026 idea-validation pass** ([`audits/07-validation-april-2026.md`](audits/07-validation-april-2026.md)) that reshaped the load-bearing assumptions and risk weights. Reusable: re-run before any major README revision or before doubling down on a phase. |
+| [`../README.md`](../README.md) | The repo-root README — written as if the product shipped (per the brief). The roadmap reflects a "pretend-shipped" state and must be reconciled with reality before public launch. |
+| [`assets/`](assets/) | Demo recording assets for [`../README.md`](../README.md). `demo.tape` is the vhs script; `demo-session.sh` is the mock Claude Code session it drives; `demo.gif` is the rendered output. Render with `VHS_NO_SANDBOX=true vhs docs/assets/demo.tape` from the repo root. |
+| [`audits/`](audits/) | The 6-pass audit cycle on the repo-root README ([`../README.md`](../README.md)) — truth (`01`), coverage (`02`), inclusion (`03`), persona walkthrough (`04`), form (`05`), synthesis (`06`). Plus the **April 2026 idea-validation pass** ([`audits/07-validation-april-2026.md`](audits/07-validation-april-2026.md)) that reshaped the load-bearing assumptions and risk weights. Reusable: re-run before any major README revision or before doubling down on a phase. |
 
 > **Citation conventions.** Most docs use inline links plus a `## References` section at the bottom. The two highest-citation docs — `05-skill-brief.md` and `08-design-decisions.md` — use GitHub-flavored footnotes (`[^name]`) instead, because the inline-link form gets noisy when a single sentence cites three sources. Both render correctly.
 

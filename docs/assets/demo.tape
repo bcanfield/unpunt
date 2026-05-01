@@ -1,13 +1,13 @@
 # un-punt demo recording
-# Render with: VHS_NO_SANDBOX=true vhs assets/demo.tape
-# Output:      assets/demo.gif
+# Render with: VHS_NO_SANDBOX=true vhs docs/assets/demo.tape
+# Output:      docs/assets/demo.gif
 #
 # VHS_NO_SANDBOX is required on macOS — vhs uses headless Chrome via go-rod,
 # which fails to launch in sandboxed mode. Without the flag you get
 # "could not open ttyd: navigation failed: net::ERR_CONNECTION_REFUSED".
 # See https://github.com/charmbracelet/vhs/issues/504
 #
-# Scene order (per repo-readme.md placeholder):
+# Scene order (per README.md placeholder):
 #   1. Agent silently captures a TODO and an `as any` mid-task
 #   2. User says "looks good, let's wrap up" and the agent's nudge
 #   3. Visible sweep with `npm test` running between fixes

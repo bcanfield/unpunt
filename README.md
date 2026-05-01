@@ -27,9 +27,9 @@ Your AI productivity gains are quietly turning into a backlog of unfinished work
 
 ## A 30-second demo
 
-![un-punt demo](assets/demo.gif)
+![un-punt demo](docs/assets/demo.gif)
 
-*Rendered from `assets/demo.tape` against a mock session script. When the real MVP ships, the tape will record a live Claude Code session instead. Dialogue below is the image-less fallback.*
+*Rendered from `docs/assets/demo.tape` against a mock session script. When the real MVP ships, the tape will record a live Claude Code session instead. Dialogue below is the image-less fallback.*
 
 You're in Claude Code, finishing up. Earlier today the agent wrote `// TODO: handle clock skew` and used `as any` once. You didn't notice. un-punt was filing items in the background.
 
@@ -84,7 +84,7 @@ Once installed, the skill is available to your agent. The agent offers a cleanup
 
 ### Codex / Cursor
 
-Coming in phase 2. Codex ships at parity (same skill body, different frontmatter and install path). Cursor is experimental; its `.cursor/rules` system limits some triggers compared to Claude Code. See [`09-adapters.md`](09-adapters.md).
+Coming in phase 2. Codex ships at parity (same skill body, different frontmatter and install path). Cursor is experimental; its `.cursor/rules` system limits some triggers compared to Claude Code. See [`09-adapters.md`](docs/09-adapters.md).
 
 ### Manual install (no marketplace required)
 
@@ -112,7 +112,7 @@ un-punt status   # open / planned / resolved counts
 
 The agent does the work, guided by a skill that teaches it what to capture and when. Your agent uses its existing tools (Edit, Write, Bash) to write items, plan sweeps, run verification, and commit fixes.
 
-Full architecture in [`03-architecture.md`](03-architecture.md).
+Full architecture in [`03-architecture.md`](docs/03-architecture.md).
 
 ---
 
@@ -123,7 +123,7 @@ Every cleanup commit is **small, scoped, reversible, justified, verified**. If i
 > **Refuse > Flag > Fix.** A flag is success. A bad fix is failure.
 
 <!-- ASSET PLACEHOLDER: assets/commit-receipts.png -->
-> **[PLACEHOLDER: `assets/commit-receipts.png`]** `git log -1` on a real `cleanup:` commit showing the structured footer (`Item:` / `File:` / `Why this:` / `Why now safe:` / `Sweep:`). Capture once a real sweep has run. Format spec in [`05-skill-brief.md`](05-skill-brief.md) §4.
+> **[PLACEHOLDER: `docs/assets/commit-receipts.png`]** `git log -1` on a real `cleanup:` commit showing the structured footer (`Item:` / `File:` / `Why this:` / `Why now safe:` / `Sweep:`). Capture once a real sweep has run. Format spec in [`05-skill-brief.md`](docs/05-skill-brief.md) §4.
 
 ### Will attempt (when confidence is high)
 
@@ -186,7 +186,7 @@ No. Capture is real-time during sessions. We never read transcript files from di
 In `.un-punt/` in your repo. Gitignored by default; opt in if you want shared history with your team.
 
 **What about prompt injection?**
-Items whose source contains prompt-injection content are categorically refused. Same for secret-pattern files. The agent treats deferral content as *data*, never as instructions. The actual load-bearing trust mechanisms aren't this rule alone — they're the categorical refusals that no per-repo config can lift, the verifier-script denylist (no `curl` / `wget` / `eval` in the test command we use as the proof step), and the disposition prompt that gates everything reaching your branch. Layer-1 instruction-following is best-effort; the gates around it are what's load-bearing. See [`02-experience.md`](02-experience.md) §Hostile-input and [`03-architecture.md`](03-architecture.md) §Threat model — the latter explicitly states this is a convention layer, not a sandbox.
+Items whose source contains prompt-injection content are categorically refused. Same for secret-pattern files. The agent treats deferral content as *data*, never as instructions. The actual load-bearing trust mechanisms aren't this rule alone — they're the categorical refusals that no per-repo config can lift, the verifier-script denylist (no `curl` / `wget` / `eval` in the test command we use as the proof step), and the disposition prompt that gates everything reaching your branch. Layer-1 instruction-following is best-effort; the gates around it are what's load-bearing. See [`02-experience.md`](docs/02-experience.md) §Hostile-input and [`03-architecture.md`](docs/03-architecture.md) §Threat model — the latter explicitly states this is a convention layer, not a sandbox.
 
 **Does this slow my agent down?**
 Capture overhead is ≤ 200ms per item. Sweep is gated to natural stopping points and never interrupts mid-task.
@@ -218,7 +218,7 @@ un-punt detects this at session start and refuses to operate. The categorical re
 | **Phase 3**: review-time / scheduled sweeps | planned | GitHub Action on PR open; cron-driven sweeps; multi-dev item dedup |
 | **Phase 4**: team aggregation | planned | optional dashboard for engineering leaders |
 
-Full plan in [`06-build-plan.md`](06-build-plan.md). Risks and the eval design are in [`07-risks-and-evals.md`](07-risks-and-evals.md).
+Full plan in [`06-build-plan.md`](docs/06-build-plan.md). Risks and the eval design are in [`07-risks-and-evals.md`](docs/07-risks-and-evals.md).
 
 ---
 
@@ -226,15 +226,15 @@ Full plan in [`06-build-plan.md`](06-build-plan.md). Risks and the eval design a
 
 | File | What |
 |---|---|
-| [`01-vision.md`](01-vision.md) | What we're building and why. The pain, who it's for, why now. |
-| [`02-experience.md`](02-experience.md) | User flows, trust contract, working-state invariants. |
-| [`03-architecture.md`](03-architecture.md) | Components, data flow, what NOT to build. |
-| [`04-data-model.md`](04-data-model.md) | Markdown spec for `.un-punt/`. |
-| [`05-skill-brief.md`](05-skill-brief.md) | What the skill must teach. The IP brief. |
-| [`06-build-plan.md`](06-build-plan.md) | Phases 0–4 with gates and time estimates. |
-| [`07-risks-and-evals.md`](07-risks-and-evals.md) | Top 5 load-bearing assumptions and the golden-set eval. |
-| [`08-design-decisions.md`](08-design-decisions.md) | Why markdown over SQLite, agent over classifier. |
-| [`09-adapters.md`](09-adapters.md) | Adapter design for Claude Code, Codex, and Cursor. |
+| [`01-vision.md`](docs/01-vision.md) | What we're building and why. The pain, who it's for, why now. |
+| [`02-experience.md`](docs/02-experience.md) | User flows, trust contract, working-state invariants. |
+| [`03-architecture.md`](docs/03-architecture.md) | Components, data flow, what NOT to build. |
+| [`04-data-model.md`](docs/04-data-model.md) | Markdown spec for `.un-punt/`. |
+| [`05-skill-brief.md`](docs/05-skill-brief.md) | What the skill must teach. The IP brief. |
+| [`06-build-plan.md`](docs/06-build-plan.md) | Phases 0–4 with gates and time estimates. |
+| [`07-risks-and-evals.md`](docs/07-risks-and-evals.md) | Top 5 load-bearing assumptions and the golden-set eval. |
+| [`08-design-decisions.md`](docs/08-design-decisions.md) | Why markdown over SQLite, agent over classifier. |
+| [`09-adapters.md`](docs/09-adapters.md) | Adapter design for Claude Code, Codex, and Cursor. |
 
 ---
 

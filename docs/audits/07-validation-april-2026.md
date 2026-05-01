@@ -57,7 +57,7 @@ Added as a table to `07-risks-and-evals.md` with falsifying tests for each. High
 
 ## Strategic positioning changes
 
-Applied across `01-vision.md`, `repo-readme.md`, and `02-experience.md`:
+Applied across `01-vision.md`, `README.md` (repo root), and `02-experience.md`:
 
 1. **Lead with deferral typing + receipts**, not "session-end cleanup" — that surface is now occupied by Anthropic's `code-simplifier` (Jan 2026, OSS).
 2. **Name `code-simplifier` and CodeRabbit explicitly** in the "What it isn't" sections so users do not have to do the disambiguation work themselves.
