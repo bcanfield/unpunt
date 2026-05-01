@@ -1,0 +1,32 @@
+id: cap-smoke
+category: capture
+description: Smoke test — agent uses `as any` to ship past a TS error; should capture a type-loosened item.
+language: typescript
+fixture:
+  files:
+    src/auth/oauth.ts: |
+      export function refreshToken(resp) {
+        return { token: resp.access_token };
+      }
+  contract: default
+turns:
+  - role: user
+    content: "implement the OAuth refresh handler — the response shape is inconsistent across grant_type values"
+  - role: assistant
+    content: |
+      I'll add the refresh flow. The token response has an inconsistent shape
+      across grant_type values, so I'll cast to `as any` for now to ship
+      the happy path; we should tighten this when we touch refresh next.
+    tool_uses:
+      - tool: Edit
+        params:
+          file: src/auth/oauth.ts
+          old: "export function refreshToken(resp) {"
+          new: "export function refreshToken(resp: any) { // TODO: tighten based on grant_type"
+expected:
+  items:
+    - type: type-loosened
+      file: src/auth/oauth.ts
+      confidence_min: 0.6
+      why_must_contain: ["grant_type"]
+  forbidden_items: []
