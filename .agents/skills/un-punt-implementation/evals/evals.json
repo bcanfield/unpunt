@@ -1,0 +1,61 @@
+{
+  "skill_name": "un-punt-implementation",
+  "evals": [
+    {
+      "id": 0,
+      "name": "phase-0a-skill-draft-task",
+      "prompt": "Let's start on Phase 0a from the un-punt build plan — I want to draft the first version of the skill body. What do you need to read before touching anything, and what's the acceptance criteria for v0?",
+      "expected_output": "Agent should reference docs/05-skill-brief.md as the primary read, docs/11-checklist.md Phase 0a for the acceptance checklist (≤500 lines, references one level deep, description triggers, 3-5 worked capture examples, etc.), and avoid drafting the skill body before reading those docs.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "tempted-to-add-mcp-server",
+      "prompt": "I'm thinking about adding a small MCP server for filesystem ops on `.un-punt/items/` — it'd be cleaner than having the agent shell out to `rg` and `cat` everywhere. Can you scaffold one in `packages/mcp/`?",
+      "expected_output": "Agent should refuse, citing docs/08-design-decisions.md decision 13 (MCP server rejected at MVP) and the 'resist complexity' principle. Should NOT scaffold the package. Should offer the in-spec alternative: agent uses Edit/Write/Bash on markdown directly.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "tempted-to-use-sqlite",
+      "prompt": "Markdown is going to be slow when we have 2000+ items per repo. Let's use SQLite instead — I'll set up a small embedded DB and we can keep markdown as an export format.",
+      "expected_output": "Agent should refuse, citing docs/08-design-decisions.md decision 1 (markdown over SQLite, with the explicit performance note that rg over <2k items is sub-second). Should not start scaffolding SQLite. Should explain the tradeoff was already weighed.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "wants-to-revalidate-demand",
+      "prompt": "Before we ship, I want to do a fresh demand-validation pass — survey some devs, check Twitter sentiment, look at competitor traction. Can you put together a research plan?",
+      "expected_output": "Agent should point to docs/audits/07-validation-april-2026.md as the completed validation pass and treat its conclusions as settled (risk weights, demand framing). Should not produce a fresh broad-strategic research plan. May suggest a focused, scoped research check if there's a specific gap.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "narrow-sdk-question-research-allowed",
+      "prompt": "For the eval harness in `packages/evals/`, what's the current canonical way to use the Claude Agent SDK to spawn sub-agent runs and capture token counts? Need this to wire up the timing.json capture per the harness spec.",
+      "expected_output": "Agent should treat this as a focused research question (operating principle 3 — narrow factual lookup is OK). Should reference docs/10-eval-harness.md for the spec and either web-search or spawn at most one sub-agent for the SDK specifics. Should NOT refuse this on complexity-resistance grounds.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "interpreting-eval-numbers-too-literally",
+      "prompt": "Our v2 skill hit 82% recall on the golden set, up from 79% on v1. Great, we cleared the 80% threshold — let's ship. Should I open the release PR?",
+      "expected_output": "Agent should push back: the thresholds carry ±0.10 Wilson 95% CI on the 73-scenario corpus per docs/07-risks-and-evals.md, so 79% vs 82% is not a meaningful difference. Agent should reference the 'stage gates are directional' principle, not encourage premature shipping, and point at the calibration-cycle stopping rule.",
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "untriggered-baseline-typescript-question",
+      "prompt": "How do I configure tsup to emit both ESM and CJS bundles with declaration files in a pnpm monorepo?",
+      "expected_output": "Generic TypeScript / pnpm question with no un-punt context. The skill should ideally NOT trigger here — this is general dev tooling. If it does trigger, it should not derail into un-punt orientation.",
+      "files": []
+    },
+    {
+      "id": 7,
+      "name": "untriggered-baseline-unrelated",
+      "prompt": "I'm debugging a hydration mismatch in a Next.js app — server renders the user's locale-formatted date, client re-renders with the browser locale and the text changes. What's the standard fix?",
+      "expected_output": "Completely unrelated to un-punt. Skill should NOT trigger. Generic Next.js question.",
+      "files": []
+    }
+  ]
+}

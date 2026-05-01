@@ -8,3 +8,5 @@ coverage/
 !.env.example
 .turbo/
 .cache/
+.agents/skills/*-workspace/
+__pycache__/
