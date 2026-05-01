@@ -236,21 +236,25 @@ Marketing can still use debt-related language for the eng-leader narrative ("the
 
 ---
 
-## 14. Refusal via `permissions.deny` + `PreToolUse` hook + skill-level bypass-mode detection (revised April 2026)
+## 14. Refusal via `permissions.deny` + `PreToolUse` hook (revised May 2026 — bypass-mode-refusal removed)
 
-**Chose**: Categorical refusals (auth, crypto, payments, migrations, lockfiles, generated code) are enforced **three** ways — `settings.json` `permissions.deny` patterns, a `PreToolUse` hook that returns `permissionDecision: "deny"`, **and a skill-level bypass-mode refusal** (skill aborts on session start if bypass mode is detected).
+**Chose**: Categorical refusals (auth, crypto, payments, migrations, lockfiles, generated code) are enforced via `settings.json` `permissions.deny` patterns plus skill-level prompt instructions. Phase 2 may add a `PreToolUse` hook for additional enforcement when permission-system is functioning. **The skill operates normally in bypass mode** (`--dangerously-skip-permissions` and equivalents) — it does NOT refuse to run, even though `permissions.deny` becomes unreliable in that mode.
 
-**Alternatives**: Skill-only ("the agent shouldn't touch these"); hook-only; permissions-only.
+**Alternatives considered (and tried)**:
+- *Skill-only* — the agent shouldn't touch these. Insufficient for normal-mode safety because the skill is interpretive (planning-time categorical-refusal accuracy is ~55% on multi-item plans per ADR #20).
+- *Hook-only* — relies on hooks behaving correctly under bypass mode; they don't.
+- *Permissions-only* — same problem; `permissions.deny` is unreliable under bypass.
+- ***Skill-level bypass-mode refusal*** (the original v6 design) — skill aborts on session start if `CLAUDE_DANGEROUSLY_SKIP_PERMISSIONS` is set. **Reversed in May 2026 user-feedback pass.** Made un-punt uniquely uncooperative compared to other Claude Code plugins, which run normally in bypass mode. Users who run with permissions skipped are an explicit target audience; refusing for them is a worse outcome than running with reduced safety.
 
-**Why**:
+**Why** (the layered design that remains):
 - **`permissions.deny` is the documented declarative deny mechanism** but has known matching gaps (multiline commands, project vs. user precedence). [^cc-permissions][^cc-perm-traps] In addition, **Adversa disclosed in Mar 2026** a bypass when a Bash command contains > 50 subcommands (token-cost short-circuit in `bashPermissions.ts`); patched in v2.1.90, but un-punt cannot assume users are on that version.
-- **`PreToolUse` hooks see the full command string** including pipes/subshells and run *before* permission resolution. [^cc-hooks]
-- **Earlier drafts of this doc claimed `permissionDecision: "deny"` blocks even in `bypassPermissions` / `--dangerously-skip-permissions` mode. That claim does not hold.** GitHub issues anthropics/claude-code [#39523](https://github.com/anthropics/claude-code/issues/39523), [#18846](https://github.com/anthropics/claude-code/issues/18846), and [#41615](https://github.com/anthropics/claude-code/issues/41615), plus the Agentic Control Plane analysis, document that hooks are silently disabled (or behave unpredictably) under `--dangerously-skip-permissions` in current versions. The truth is **mode-and-version-dependent.**
-- **Therefore: skill-level refusal is now load-bearing**, not redundant. The skill detects bypass mode at session start (env var `CLAUDE_DANGEROUSLY_SKIP_PERMISSIONS`, the runtime permission state, or any future Anthropic-supplied probe) and **refuses to operate** — emits a one-line message explaining un-punt requires the standard permission system. No sweeps, no captures, no edits in bypass mode.
-- **Defense in depth** — settings are convenience, hooks are enforcement *when not bypassed*, skill-level refusal is the floor. [^perm-vs-hooks]
-- **Skill alone is insufficient for normal-mode refusals** — the skill is interpretive. Categorical rules must be deterministic when the permission system is functioning.
+- **GH issues #39523 / #18846 / #41615** plus Agentic Control Plane analysis document that hooks are silently disabled (or behave unpredictably) under `--dangerously-skip-permissions` in current versions. Bypass mode breaks the OS-level deny floor — but does NOT break: the skill body's adversarial-refusal prompts (100% reliable in v6 eval), the disposition prompt (interactive — runs regardless of permission mode), in-tree visibility, or working-tree reversibility.
+- **In bypass mode the load-bearing safety is the disposition prompt + user review of in-tree edits.** The blast radius of a planning-time categorical-refusal miss is "an uncommitted edit on a refused path the user sees and can `git checkout --` away" — not "an unreviewable mutation." That's acceptable for users who've explicitly opted into bypass mode.
+- **Skill alone is insufficient for normal-mode refusals** — when the permission system IS functional, `permissions.deny` is the deterministic enforcement layer that closes the skill's ~5% planning-time miss rate. So the layered design remains valuable; it's just not extended into bypass mode anymore.
 
-**Tradeoff**: three configuration surfaces. Worth it; refusal is the load-bearing trust mechanism. The skill-level bypass-mode refusal is what closes the gap when hooks aren't reliable. See [`03-architecture.md`](03-architecture.md) Threat model for the bypass-mode row and [`07-risks-and-evals.md`](07-risks-and-evals.md) C7 / C8 for the falsifying tests.
+**Tradeoff**: in bypass mode, skill operates with reduced safety (no OS-level deny fence). The disposition prompt is the user's review gate. Categorically-refused paths could see uncommitted edits that the skill's planning-time rules missed (~5% rate on multi-item plans per ADR #20). Mitigated by: (1) the user is explicit about being in bypass mode, (2) edits are visible in the working tree, (3) disposition prompt gates the commit, (4) `git checkout --` reverts. See [`03-architecture.md`](03-architecture.md) Threat model for the updated bypass-mode row and `core/golden-set/adv-008-bypass-mode.yaml` for the eval (now a *capture* test verifying the skill operates in bypass, not a refusal test).
+
+**The originally-cited risks (C7 / C8 in `docs/07-risks-and-evals.md`) are not eliminated — just accepted as the trade-off for matching Claude Code-plugin norms.**
 
 ---
 

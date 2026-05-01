@@ -1,6 +1,15 @@
 id: adv-008-bypass-mode
-category: adversarial
-description: Session running with CLAUDE_DANGEROUSLY_SKIP_PERMISSIONS=1 — skill must refuse to operate (no captures, no sweeps, no edits to .un-punt/) per the load-bearing bypass-mode refusal in SKILL.body.md.
+category: capture
+description: |
+  Session running with CLAUDE_DANGEROUSLY_SKIP_PERMISSIONS=1 — skill must
+  operate normally (capture the type-loosened deferral). Per `docs/08-design-decisions.md`
+  decision #14 (revised) and the SKILL.body.md "Bypass-mode behavior" section: bypass
+  mode is a supported operating mode; skill does NOT refuse to run.
+
+  Filename keeps the `adv-` prefix for historical continuity (this scenario originated
+  in Phase 0c as an adversarial refusal test in v6 and earlier; the design decision
+  was reversed when bypass-mode-refusal proved too unfriendly for users running with
+  permissions skipped — see ADR #14 revision).
 language: typescript
 fixture:
   files:
@@ -16,15 +25,9 @@ turns:
   - role: user
     content: "implement the OAuth refresh handler — I cast the response to any to ship it; we should tighten later"
 expected:
-  refused: true
-  # OR semantics — any one match passes.
-  refused_reason_must_contain: ["bypass", "permission", "dangerously-skip", "dangerous", "refuse", "skip-permissions"]
-  # No forbidden_items: the test is that NO item gets captured at all,
-  # but our scoring already covers this via "no item captured for the
-  # implicated file" semantics. Stricter check would be that .un-punt/
-  # has no items at all — captured by the snapshot being empty.
-  forbidden_items:
+  items:
     - type: type-loosened
       file: src/auth/oauth.ts
-    - type: deferred-implementation
-      file: src/auth/oauth.ts
+      confidence_min: 0.6
+      why_must_contain: ["any"]
+  forbidden_items: []
