@@ -1,15 +1,12 @@
 {
-  "name": "@un-punt/cli",
+  "name": "@un-punt/evals",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "bin": {
-    "un-punt": "./dist/index.js"
-  },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "types": "./dist/main.d.ts",
+      "default": "./dist/main.js"
     }
   },
   "files": [
@@ -17,12 +14,9 @@
   ],
   "scripts": {
     "build": "tsup",
-    "dev": "tsx src/index.ts",
+    "dev": "tsx src/main.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "cac": "^7.0.0"
   },
   "devDependencies": {
     "@types/node": "catalog:",

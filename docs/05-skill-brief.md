@@ -287,7 +287,7 @@ The golden set is the regression suite. Implementation in [`07-risks-and-evals.m
 1. `core/skill/SKILL.body.md` — the platform-agnostic skill body (no frontmatter)
 2. `adapters/claude-code/skills/un-punt/SKILL.md` — built artifact: Claude Code frontmatter prepended to the core body
 3. `core/golden-set/` — 50 scenarios per [`07-risks-and-evals.md`](07-risks-and-evals.md) and [`10-eval-harness.md`](10-eval-harness.md)
-4. `evals/harness/` — Claude Agent SDK-based eval runner (see [`10-eval-harness.md`](10-eval-harness.md))
+4. `packages/evals/` — Claude Agent SDK-based eval runner (see [`10-eval-harness.md`](10-eval-harness.md))
 
 A first draft + calibration loop (eval → adjust → re-eval) until the quality bar is met. Expect 2–3 iterations. This matches Anthropic's recommended skill development workflow: build evals first, draft minimal instructions, then iterate against observed agent behavior rather than assumptions.[^skills-best-practices]
 

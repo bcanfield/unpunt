@@ -10,11 +10,22 @@ pnpm · ESM · Node ≥20 · TS 6 · biome · vitest · tsup · cac
 `pnpm install` · `pnpm lint` · `pnpm format` · `pnpm typecheck` · `pnpm test` · `pnpm build`
 
 ## Layout
-- `packages/cli/` — `@tech-debt-plugin/cli`
-- planned: `core/` (skill source + `build.ts`), `adapters/claude-code/` (built artifact + plugin manifest), `packages/evals/` (Agent SDK harness)
+- `core/` — skill source (`SKILL.body.md`, `reference/`, `snippets/`) + `golden-set/` scenarios + `build.sh`
+- `adapters/claude-code/` — built skill artifact + plugin manifest + settings
+- `packages/cli/` — `@un-punt/cli` (thin installer)
+- `packages/evals/` — `@un-punt/evals` (Claude Agent SDK harness)
 
 ## Conventions
-ESM only. No tooling beyond Stack. Commit built `SKILL.md`; CI runs `pnpm build && git diff --exit-code`.
+ESM only. No tooling beyond Stack. Commit built `SKILL.md`; CI runs `pnpm build && git diff --exit-code`. Shared workspace devDeps go in `pnpm-workspace.yaml` `catalog:`, referenced as `"name": "catalog:"` from each package.
+
+## After completing a task
+Three rules — apply each independently. Most tasks need none of them.
+
+1. **Deviated from a spec doc?** Edit the spec doc in the same change. Silent drift is the failure mode.
+2. **Made a decision that constrains future work?** Append a numbered entry to `docs/08-design-decisions.md` in the *chose / alternatives / why / tradeoff* shape (see existing entries). Bar: future-constraining, irreversible-ish, or answers an architectural question an agent will plausibly re-ask. **Skip for**: bug fixes, formatting, mechanical renames, obvious tooling picks, anything already covered by an existing decision.
+3. **Changed a live convention agents must follow?** Update `AGENTS.md` (this file).
+
+Per-task narrative lives in commit messages + PR descriptions, not a `WORKLOG.md`. `CHANGELOG.md` deferred until v0.1 launch (Keep a Changelog format).
 
 ## un-punt rules (always-on)
 - **Settled — do not redo**: demand, threat model, competitive position, risk weights — see `docs/audits/07-validation-april-2026.md`.
@@ -23,5 +34,5 @@ ESM only. No tooling beyond Stack. Commit built `SKILL.md`; CI runs `pnpm build 
 
 ## Skills (`.agents/skills/`)
 - `un-punt-implementation` — full implementation playbook (load when working on `docs/`-spec tasks)
-- `skill-creator` — skill body / `core/build.ts`
+- `skill-creator` — skill body / `core/build.sh`
 - `claude-api` — `packages/evals/`

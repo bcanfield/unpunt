@@ -51,24 +51,24 @@ If Anthropic later ships a first-party skill-eval framework (or full Inspect AI 
 ## Repository layout
 
 ```text
-evals/
-├── harness/
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── src/
-│       ├── main.ts              — orchestrator: parallel runs + aggregation
-│       ├── runScenario.ts       — single-scenario driver
-│       ├── score.ts             — scoring logic (capture / non-capture / planning)
-│       ├── report.ts            — markdown report writer
-│       ├── fixtures.ts          — tmp-repo setup/teardown
-│       └── types.ts             — Scenario, ExpectedItem, ReportEntry
-├── scenarios/                    — symlink to ../core/golden-set/
+packages/evals/                  — pnpm workspace package `@un-punt/evals`
+├── package.json
+├── tsconfig.json
+├── run.sh                       — one-line wrapper: `node dist/main.js "$@"`
+├── src/
+│   ├── main.ts                  — orchestrator: parallel runs + aggregation
+│   ├── runScenario.ts           — single-scenario driver
+│   ├── score.ts                 — scoring logic (capture / non-capture / planning)
+│   ├── report.ts                — markdown report writer
+│   ├── fixtures.ts              — tmp-repo setup/teardown
+│   └── types.ts                 — Scenario, ExpectedItem, ReportEntry
+├── scenarios/                   — symlink to ../../core/golden-set/
 └── reports/
     ├── v1-2026-04-30T14-22Z.md
     └── v2-2026-05-02T09-04Z.md
 ```
 
-`evals/run.sh` — one-line wrapper: `node evals/harness/dist/main.js "$@"`.
+`packages/evals/run.sh` — one-line wrapper: `node packages/evals/dist/main.js "$@"`.
 
 ---
 
@@ -408,7 +408,7 @@ Both caps are configurable via `--max-cost-per-scenario` and `--max-total-cost`.
 
 ```bash
 # First-time setup
-cd evals/harness
+cd packages/evals
 pnpm install
 pnpm build
 

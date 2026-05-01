@@ -1,8 +1,16 @@
 # 08 — Design Decisions
 
-The major architectural decisions and why we made them. Read this before relitigating any of them.
+The project's decision register. Read this before relitigating any of them.
 
-Each decision: **chose**, **alternatives**, **why**, **tradeoff**.
+**Each decision**: *chose*, *alternatives*, *why*, *tradeoff*. Numbered, append-only.
+
+**Bar for adding a new entry** (per `AGENTS.md` "After completing a task"):
+- Constrains future work, *or*
+- Hard to reverse, *or*
+- Deviates from a spec doc (also requires editing the spec doc in the same PR), *or*
+- Answers an architectural question an agent will plausibly re-ask later.
+
+**Not** for: bug fixes, formatting, mechanical renames, obvious tooling picks, anything already covered by an existing decision.
 
 ---
 
@@ -259,6 +267,40 @@ Marketing can still use debt-related language for the eng-leader narrative ("the
 - **Reconsider MCP** if/when team aggregation (Phase 4) needs a remote service to ingest counts/types/ages — that *is* an external system.
 
 **Tradeoff**: each platform needs a thin adapter (Claude plugin, Codex `AGENTS.md`, Cursor rule). The skill content is shared.
+
+---
+
+## 16. Hybrid workspace layout — `packages/` for TS workspaces, repo root for spec trees
+
+**Chose**: Pnpm workspace packages (`@un-punt/cli`, `@un-punt/evals`) live under `packages/`. Spec-driven trees (`core/`, `adapters/claude-code/`) live at the repo root. Both `pnpm-workspace.yaml` and `docs/11-checklist.md` Phase −1 reflect this.
+
+**Alternatives**:
+- *Strict per-original-checklist*: `core/`, `adapters/`, `evals/harness/`, `cli/` all at repo root, no `packages/` dir.
+- *All-under-packages*: even `core/` and `adapters/` become workspace packages.
+
+**Why**:
+- **TS workspaces want `packages/*`** — pnpm workspace, catalog refs, `pnpm --filter @un-punt/<name>` all assume the convention. Putting `cli/` and `evals/harness/` at root works but loses the visual signal that these are publishable npm packages.
+- **`core/` and `adapters/` aren't TS packages** — they're spec content (markdown skill body + reference + scenarios) and built skill artifacts (markdown SKILL.md + plugin.json). Forcing them into the `packages/` mold would lie about what they are.
+- **Adapter installer paths stay sane** — `cp -r adapters/claude-code/skills/un-punt ~/.claude/skills/` matches what 09-adapters.md prescribes; nesting it under `packages/` would make the path uglier.
+
+**Tradeoff**: two top-level conventions to remember (`packages/*` vs root). Mitigated by AGENTS.md "Layout" block listing all four. Required updating `docs/11-checklist.md` and `docs/{05,06,10}-*.md` path references in the same change to match (per the deviation rule).
+
+---
+
+## 17. pnpm catalog for shared workspace devDeps
+
+**Chose**: Versions of `@types/node`, `tsup`, `tsx`, `vitest` declared once in `pnpm-workspace.yaml` `catalog:`, referenced as `"name": "catalog:"` from each package's `devDependencies`.
+
+**Alternatives**:
+- *Per-package duplication*: each `packages/*/package.json` carries its own version pin. Drift over time.
+- *Root devDependencies + hoisting accident*: only declare at root; rely on pnpm hoisting so workspace packages find them via `node_modules` lookup. Each package.json then lies about what it uses; `pnpm --filter` semantics get fragile; future package extraction breaks.
+
+**Why**:
+- **Single source of truth for versions** — upgrading tsup is one line, not N.
+- **Each package still declares what it uses** — explicit dependency graph; honest lockfile; future package extraction works.
+- **Stable in pnpm 10+** — we're already on 10.7.0.
+
+**Tradeoff**: pnpm-specific (no npm/yarn fallback). Acceptable — `packageManager: "pnpm@10.7.0"` is locked in `package.json`.
 
 ---
 

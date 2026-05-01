@@ -27,8 +27,8 @@ Before any plugin code: write the skill, build the golden set, measure. The gold
 **Deliverables** (layout per [`09-adapters.md`](09-adapters.md)):
 - `core/skill/SKILL.body.md` — first skill body draft (from [`05-skill-brief.md`](05-skill-brief.md))
 - `core/golden-set/` — 50 scenarios (30 capture, 10 non-capture, 10 sweep planning)
-- `evals/harness/` — Claude Agent SDK-based runner (see [`10-eval-harness.md`](10-eval-harness.md))
-- `evals/reports/v1-<date>.md` — per-scenario results + aggregates
+- `packages/evals/` — Claude Agent SDK-based runner (see [`10-eval-harness.md`](10-eval-harness.md))
+- `packages/evals/reports/v1-<date>.md` — per-scenario results + aggregates
 
 **Pass**: recall ≥ 80%, precision ≥ 90%, planning sanity ≥ 9/10, cost ≤ $0.50 / session. (See [`07-risks-and-evals.md`](07-risks-and-evals.md) §Scoring & thresholds for canonical gates and fail-hard cutoffs.)
 

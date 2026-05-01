@@ -13,16 +13,16 @@ This is the operational version of [`06-build-plan.md`](06-build-plan.md). Read 
 - [ ] Run name availability check: `npm view un-punt`, github.com/un-punt, USPTO TESS, .com WHOIS.
 - [ ] If any blocks → rename now, sweep all docs, then proceed.
 - [ ] Create root repo: `git init un-punt/`.
-- [ ] Scaffold per [`09-adapters.md`](09-adapters.md) §1:
+- [ ] Scaffold per [`09-adapters.md`](09-adapters.md) §1 (**hybrid layout**: TS workspace packages live under `packages/`; spec-driven trees stay at repo root):
   - [ ] `core/skill/{reference,snippets}/`
   - [ ] `core/golden-set/`
   - [ ] `adapters/claude-code/skills/un-punt/`
   - [ ] `adapters/claude-code/snippets/`
-  - [ ] `evals/harness/src/`
-  - [ ] `evals/reports/`
-  - [ ] `cli/`
+  - [ ] `packages/evals/src/`
+  - [ ] `packages/evals/reports/`
+  - [ ] `packages/cli/`
 - [ ] Add LICENSE (MIT), `.gitignore` (`node_modules/`, `dist/`, `*.tsbuildinfo`).
-- [ ] Init pnpm workspaces: root `pnpm-workspace.yaml` covering `evals/harness`, `cli`.
+- [ ] Init pnpm workspaces: root `pnpm-workspace.yaml` covering `packages/*` (i.e., `packages/cli`, `packages/evals`).
 - [ ] Add `core/build.sh` — concatenates each adapter's frontmatter + `core/skill/SKILL.body.md` → `adapters/<platform>/skills/un-punt/SKILL.md`; copies `core/skill/reference/` and `core/skill/snippets/` into the adapter tree.
 - [ ] Stub README pointing at `docs-final/`.
 
@@ -55,7 +55,7 @@ This is the operational version of [`06-build-plan.md`](06-build-plan.md). Read 
 
 ## Phase 0b — Eval harness (~2 days; parallelize with 0a)
 
-- [ ] `cd evals/harness && pnpm init`; add deps: `@anthropic-ai/claude-agent-sdk`, `js-yaml`, `cac`, `chalk`, `tsx`, `typescript`.
+- [ ] `cd packages/evals && pnpm init`; add deps: `@anthropic-ai/claude-agent-sdk`, `js-yaml`, `cac`, `chalk`, `tsx`, `typescript`.
 - [ ] Add `tsconfig.json` (strict, target ES2022, ESM).
 - [ ] Write `src/types.ts` — `Scenario`, `ExpectedItem`, `ScenarioResult`, `ReportEntry`.
 - [ ] Write `src/fixtures.ts`:
@@ -72,9 +72,9 @@ This is the operational version of [`06-build-plan.md`](06-build-plan.md). Read 
   - [ ] `scoreCapture(snapshot, expected)` — recall + precision per scenario.
   - [ ] `scoreNonCapture(snapshot, expected)` — false-positive check.
   - [ ] `scorePlanning(snapshot, expected)` — bucket equality with partial credit.
-- [ ] Write `src/report.ts` — aggregate all scenarios; emit `evals/reports/v<n>-<iso>.md` per [`10-eval-harness.md`](10-eval-harness.md) §Reporting.
+- [ ] Write `src/report.ts` — aggregate all scenarios; emit `packages/evals/reports/v<n>-<iso>.md` per [`10-eval-harness.md`](10-eval-harness.md) §Reporting.
 - [ ] Write `src/main.ts` — CLI: `all`, `one <id>`, `category <name>`, `--workers N`, `--max-cost-per-scenario X`, `--max-total-cost Y`.
-- [ ] Write `evals/run.sh` — one-line node wrapper.
+- [ ] Write `packages/evals/run.sh` — one-line node wrapper.
 - [ ] **Smoke test** — handcraft `core/golden-set/cap-smoke.yaml` (one trivial capture); run `pnpm --filter @un-punt/evals run one cap-smoke`; verify report.md is generated and the scenario passes.
 
 > **Checkpoint 0b**: One scenario runs end-to-end and produces a scored report. Cost ≤ $0.30 for that scenario.
@@ -124,8 +124,8 @@ The corpus is **error-analysis-first** — built from real misses, not imagined 
 
 ## Phase 0d — Eval cycles (~1–2 days)
 
-- [ ] Run full eval v1: `evals/run.sh all`.
-- [ ] Read `evals/reports/v1-<iso>.md`. Record verdict.
+- [ ] Run full eval v1: `packages/evals/run.sh all`.
+- [ ] Read `packages/evals/reports/v1-<iso>.md`. Record verdict.
 - [ ] **If PASS** (all stage gates clear — recall trace-bearing ≥80%, recall trace-less ≥50% soft, precision ≥90%, adversarial 8/8, calibration ECE ≤0.10, per-language recall ≥0.70 each, planning ≥9/10): proceed to 0e.
 - [ ] **If FAIL-CLEAN** (any single gate in the fail-clean band):
   - [ ] Read the report's "Suggested skill changes" section.
