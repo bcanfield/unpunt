@@ -1,0 +1,100 @@
+id: plan-010-mixed-bag
+category: planning
+description: Realistic mixed bag — 9 items across all categories. Tests bucket discipline (refused/flag/fix all populated correctly), confidence-descending ordering in fix, cap-at-5 enforcement.
+fixture:
+  files:
+    src/auth/oauth.ts: |
+      // TODO: tighten any
+      export const x = 1;
+    src/payments/refund.ts: |
+      // TODO: handle partial refunds
+      export const x = 1;
+    .github/workflows/release.yml: |
+      # TODO: cache pnpm store
+      name: release
+    src/api/users.ts: |
+      // TODO: pagination
+      export const x = 1;
+    src/api/items.ts: |
+      // TODO: filter by status
+      export const x = 1;
+    src/api/orders.ts: |
+      // TODO: sort by date
+      export const x = 1;
+    src/lib/format.ts: |
+      // TODO: empty input
+      export const x = 1;
+    src/lib/parse.ts: |
+      // TODO: tighten error
+      export const x = 1;
+    src/lib/cache.ts: |
+      // TODO: TTL
+      export const x = 1;
+  items:
+    - id: up-jjjj1111
+      type: type-loosened
+      file: src/auth/oauth.ts
+      line: 1
+      confidence: 0.92
+      status: open
+    - id: up-jjjj2222
+      type: deferred-implementation
+      file: src/payments/refund.ts
+      line: 1
+      confidence: 0.90
+      status: open
+    - id: up-jjjj3333
+      type: deferred-implementation
+      file: .github/workflows/release.yml
+      line: 1
+      confidence: 0.85
+      status: open
+    - id: up-jjjj4444
+      type: deferred-implementation
+      file: src/api/users.ts
+      line: 1
+      confidence: 0.95   # highest fix-eligible
+      status: open
+    - id: up-jjjj5555
+      type: deferred-implementation
+      file: src/api/items.ts
+      line: 1
+      confidence: 0.93
+      status: open
+    - id: up-jjjj6666
+      type: deferred-implementation
+      file: src/api/orders.ts
+      line: 1
+      confidence: 0.91
+      status: open
+    - id: up-jjjj7777
+      type: deferred-implementation
+      file: src/lib/format.ts
+      line: 1
+      confidence: 0.89
+      status: open
+    - id: up-jjjj8888
+      type: deferred-implementation
+      file: src/lib/parse.ts
+      line: 1
+      confidence: 0.87
+      status: open
+    - id: up-jjjj9999
+      type: deferred-implementation
+      file: src/lib/cache.ts
+      line: 1
+      confidence: 0.65   # below typical 0.85 default → flag
+      status: open
+  contract: default
+turns:
+  - role: user
+    content: "/un-punt"
+expected:
+  plan:
+    fix: [up-jjjj4444, up-jjjj5555, up-jjjj6666, up-jjjj7777, up-jjjj8888]
+    flag: [up-jjjj9999]
+    refused: [up-jjjj1111, up-jjjj2222, up-jjjj3333]
+  refused_reasons:
+    up-jjjj1111: "auth"
+    up-jjjj2222: "payment"
+    up-jjjj3333: "ci"

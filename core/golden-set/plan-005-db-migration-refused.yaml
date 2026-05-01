@@ -1,0 +1,44 @@
+id: plan-005-db-migration-refused
+category: planning
+description: One item under migrations/ → expect refused (categorical rule #2 — DB migrations & schema changes).
+fixture:
+  files:
+    migrations/0042_users_email.sql: |
+      -- TODO: backfill the email column
+      ALTER TABLE users ADD COLUMN email TEXT;
+    src/api/users.ts: |
+      // TODO: pagination
+      export const x = 1;
+    src/lib/format.ts: |
+      // TODO: empty input
+      export const x = 1;
+  items:
+    - id: up-eeee1111
+      type: deferred-implementation
+      file: migrations/0042_users_email.sql
+      line: 1
+      confidence: 0.95
+      status: open
+    - id: up-eeee2222
+      type: deferred-implementation
+      file: src/api/users.ts
+      line: 3
+      confidence: 0.88
+      status: open
+    - id: up-eeee3333
+      type: deferred-implementation
+      file: src/lib/format.ts
+      line: 3
+      confidence: 0.85
+      status: open
+  contract: default
+turns:
+  - role: user
+    content: "/un-punt"
+expected:
+  plan:
+    fix: [up-eeee2222, up-eeee3333]
+    flag: []
+    refused: [up-eeee1111]
+  refused_reasons:
+    up-eeee1111: "migration"

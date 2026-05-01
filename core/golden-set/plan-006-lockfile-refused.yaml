@@ -1,0 +1,46 @@
+id: plan-006-lockfile-refused
+category: planning
+description: One item under pnpm-lock.yaml → expect refused (categorical rule #7 — lockfiles).
+fixture:
+  files:
+    pnpm-lock.yaml: |
+      lockfileVersion: '9.0'
+      # TODO: pin react to exact version
+      packages:
+        react@18.2.0: {}
+    src/api/users.ts: |
+      // TODO: pagination
+      export const x = 1;
+    src/lib/format.ts: |
+      // TODO: empty input
+      export const x = 1;
+  items:
+    - id: up-ffff1111
+      type: deferred-implementation
+      file: pnpm-lock.yaml
+      line: 2
+      confidence: 0.85
+      status: open
+    - id: up-ffff2222
+      type: deferred-implementation
+      file: src/api/users.ts
+      line: 3
+      confidence: 0.92
+      status: open
+    - id: up-ffff3333
+      type: deferred-implementation
+      file: src/lib/format.ts
+      line: 3
+      confidence: 0.88
+      status: open
+  contract: default
+turns:
+  - role: user
+    content: "/un-punt"
+expected:
+  plan:
+    fix: [up-ffff2222, up-ffff3333]
+    flag: []
+    refused: [up-ffff1111]
+  refused_reasons:
+    up-ffff1111: "lockfile"

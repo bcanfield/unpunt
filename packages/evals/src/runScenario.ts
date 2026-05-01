@@ -42,6 +42,7 @@ export async function runScenario(scenario: Scenario, opts: RunOptions): Promise
         permissionMode: "dontAsk",
         maxTurns: MAX_TURNS,
         model: MODEL,
+        ...(scenario.fixture.env ? { env: scenario.fixture.env } : {}),
       },
     });
 

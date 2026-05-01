@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { access, cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { access, cp, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import type { FixtureItem, Scenario } from "./types.js";
@@ -26,6 +26,14 @@ export async function setupTmpRepo(scenario: Scenario): Promise<string> {
     await mkdir(itemsDir, { recursive: true });
     for (const item of scenario.fixture.items) {
       await writeFile(join(itemsDir, `${item.id}.md`), renderFixtureItem(item));
+    }
+  }
+
+  if (scenario.fixture.symlinks) {
+    for (const [linkRel, target] of Object.entries(scenario.fixture.symlinks)) {
+      const linkAbs = join(tmpDir, linkRel);
+      await mkdir(dirname(linkAbs), { recursive: true });
+      await symlink(target, linkAbs);
     }
   }
 

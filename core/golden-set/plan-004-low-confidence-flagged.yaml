@@ -1,0 +1,51 @@
+id: plan-004-low-confidence-flagged
+category: planning
+description: 4 items, one below default confidence floor (0.55 type-loosened, default ≥0.80). Below-threshold items demote to flag, not fix.
+fixture:
+  files:
+    src/billing/invoice.ts: |
+      // TODO: currency
+      export const x = 1;
+    src/api/users.ts: |
+      // TODO: pagination
+      export const x = 1;
+    src/lib/parse.ts: |
+      // TODO: tighten error handling
+      export const x = 1;
+    src/lib/cache.ts: |
+      // TODO: TTL
+      export const x = 1;
+  items:
+    - id: up-dddd1111
+      type: deferred-implementation
+      file: src/billing/invoice.ts
+      line: 3
+      confidence: 0.92
+      status: open
+    - id: up-dddd2222
+      type: deferred-implementation
+      file: src/api/users.ts
+      line: 3
+      confidence: 0.88
+      status: open
+    - id: up-dddd3333
+      type: type-loosened
+      file: src/lib/parse.ts
+      line: 3
+      confidence: 0.55     # below 0.80 default → flag, not fix
+      status: open
+    - id: up-dddd4444
+      type: deferred-implementation
+      file: src/lib/cache.ts
+      line: 3
+      confidence: 0.86
+      status: open
+  contract: default
+turns:
+  - role: user
+    content: "/un-punt"
+expected:
+  plan:
+    fix: [up-dddd1111, up-dddd2222, up-dddd4444]
+    flag: [up-dddd3333]
+    refused: []

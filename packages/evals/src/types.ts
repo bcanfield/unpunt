@@ -30,6 +30,19 @@ export interface ScenarioFixture {
   files?: Record<string, string>;
   items?: FixtureItem[];
   contract?: "default" | string;
+  /**
+   * Symlinks to create in the tmp repo. Map of `link_path → target_path`.
+   * Targets may point outside the repo root — used by adversarial scenarios
+   * (CVE-class containment tests) to verify the skill refuses to follow them.
+   */
+  symlinks?: Record<string, string>;
+  /**
+   * Extra environment variables passed through to the Agent SDK process.
+   * Used for adversarial scenarios that depend on env-var state — e.g.
+   * `CLAUDE_DANGEROUSLY_SKIP_PERMISSIONS=1` to test the skill's
+   * bypass-mode refusal.
+   */
+  env?: Record<string, string>;
 }
 
 export interface ScenarioTurn {

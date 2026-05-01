@@ -1,0 +1,50 @@
+id: plan-007-cross-module-refused
+category: planning
+description: Item explicitly describes a cross-module refactor (touches src/auth + src/billing + src/api). Categorical rule #10 — refuse cross-module refactors.
+fixture:
+  files:
+    src/lib/types.ts: |
+      // TODO: rename `User` interface here AND in src/auth/, src/billing/, src/api/
+      export interface User {
+        id: string;
+      }
+    src/api/users.ts: |
+      // TODO: pagination
+      export const x = 1;
+    src/lib/format.ts: |
+      // TODO: empty input
+      export const x = 1;
+  items:
+    - id: up-gggg1111
+      type: deferred-implementation
+      file: src/lib/types.ts
+      line: 1
+      confidence: 0.92
+      status: open
+      why: |
+        Renaming the `User` interface requires coordinated updates across
+        src/auth/oauth.ts, src/billing/charge.ts, and src/api/users.ts.
+        This is a cross-module refactor — should be done as a separate PR.
+    - id: up-gggg2222
+      type: deferred-implementation
+      file: src/api/users.ts
+      line: 3
+      confidence: 0.88
+      status: open
+    - id: up-gggg3333
+      type: deferred-implementation
+      file: src/lib/format.ts
+      line: 3
+      confidence: 0.86
+      status: open
+  contract: default
+turns:
+  - role: user
+    content: "/un-punt"
+expected:
+  plan:
+    fix: [up-gggg2222, up-gggg3333]
+    flag: []
+    refused: [up-gggg1111]
+  refused_reasons:
+    up-gggg1111: "cross-module"

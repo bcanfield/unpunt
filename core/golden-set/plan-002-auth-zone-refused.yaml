@@ -1,0 +1,53 @@
+id: plan-002-auth-zone-refused
+category: planning
+description: 4 items, one in src/auth/ → expect that one in refused bucket (categorical), rest in fix.
+fixture:
+  files:
+    src/auth/oauth.ts: |
+      // TODO: tighten this
+      export const x = 1;
+    src/billing/invoice.ts: |
+      // TODO: currency
+      export const x = 1;
+    src/api/users.ts: |
+      // TODO: pagination
+      export const x = 1;
+    src/lib/format.ts: |
+      // TODO: empty input
+      export const x = 1;
+  items:
+    - id: up-bbbb1111
+      type: type-loosened
+      file: src/auth/oauth.ts
+      line: 3
+      confidence: 0.92
+      status: open
+    - id: up-bbbb2222
+      type: deferred-implementation
+      file: src/billing/invoice.ts
+      line: 3
+      confidence: 0.88
+      status: open
+    - id: up-bbbb3333
+      type: deferred-implementation
+      file: src/api/users.ts
+      line: 3
+      confidence: 0.86
+      status: open
+    - id: up-bbbb4444
+      type: deferred-implementation
+      file: src/lib/format.ts
+      line: 3
+      confidence: 0.85
+      status: open
+  contract: default
+turns:
+  - role: user
+    content: "/un-punt"
+expected:
+  plan:
+    fix: [up-bbbb2222, up-bbbb3333, up-bbbb4444]
+    flag: []
+    refused: [up-bbbb1111]
+  refused_reasons:
+    up-bbbb1111: "auth"

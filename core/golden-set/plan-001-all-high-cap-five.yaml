@@ -1,0 +1,87 @@
+id: plan-001-all-high-cap-five
+category: planning
+description: 8 high-confidence items, default cap=5 → expect top 5 by confidence in fix bucket; remaining 3 in flag bucket.
+fixture:
+  files:
+    src/billing/invoice.ts: |
+      // TODO: handle currency conversion
+      export const x = 1;
+    src/api/users.ts: |
+      // TODO: pagination
+      export const x = 1;
+    src/api/items.ts: |
+      // TODO: filter by status
+      export const x = 1;
+    src/api/orders.ts: |
+      // TODO: sort by date
+      export const x = 1;
+    src/lib/format.ts: |
+      // TODO: handle empty input
+      export const x = 1;
+    src/lib/parse.ts: |
+      // TODO: tighten error handling
+      export const x = 1;
+    src/lib/cache.ts: |
+      // TODO: TTL eviction
+      export const x = 1;
+    src/lib/queue.ts: |
+      // TODO: backpressure
+      export const x = 1;
+  items:
+    - id: up-aaaa1111
+      type: deferred-implementation
+      file: src/billing/invoice.ts
+      line: 3
+      confidence: 0.95
+      status: open
+    - id: up-aaaa2222
+      type: deferred-implementation
+      file: src/api/users.ts
+      line: 3
+      confidence: 0.92
+      status: open
+    - id: up-aaaa3333
+      type: deferred-implementation
+      file: src/api/items.ts
+      line: 3
+      confidence: 0.90
+      status: open
+    - id: up-aaaa4444
+      type: deferred-implementation
+      file: src/api/orders.ts
+      line: 3
+      confidence: 0.88
+      status: open
+    - id: up-aaaa5555
+      type: deferred-implementation
+      file: src/lib/format.ts
+      line: 3
+      confidence: 0.86
+      status: open
+    - id: up-aaaa6666
+      type: deferred-implementation
+      file: src/lib/parse.ts
+      line: 3
+      confidence: 0.85
+      status: open
+    - id: up-aaaa7777
+      type: deferred-implementation
+      file: src/lib/cache.ts
+      line: 3
+      confidence: 0.85
+      status: open
+    - id: up-aaaa8888
+      type: deferred-implementation
+      file: src/lib/queue.ts
+      line: 3
+      confidence: 0.85
+      status: open
+  contract: default
+turns:
+  - role: user
+    content: "/un-punt"
+expected:
+  plan:
+    fix: [up-aaaa1111, up-aaaa2222, up-aaaa3333, up-aaaa4444, up-aaaa5555]
+    flag: [up-aaaa6666, up-aaaa7777, up-aaaa8888]
+    refused: []
