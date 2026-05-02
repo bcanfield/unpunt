@@ -24,17 +24,26 @@ Capture is silent and continuous. The user shouldn't notice it happening — it'
 
 ### When to capture
 
+**The trigger table below is examples, not the universe.** Apply the rules to anything that looks like a deferral, hack, loose type, swallowed exception, mock implementation, or hardcoded value that should be config — even if the specific pattern isn't listed below. The 6-type enum is closed; the trigger examples expand over time as new patterns emerge in the wild.
+
+<!-- LOAD-BEARING (per Q4b research outcome): the "examples are not the universe" framing prevents the agent from treating this table as a closed checklist. Do not delete. -->
+
 | Trigger | What to capture |
 |---|---|
 | You wrote `TODO` / `FIXME` / `XXX` / `HACK` / `WIP` / `KLUDGE` / `LATER` | `deferred-implementation` (or `hack-workaround` if HACK/KLUDGE) |
 | You used `as any`, `@ts-ignore`, `# type: ignore`, or `: any` to ship | `type-loosened` |
 | You wrote `.skip` / `xit` / `it.todo` / `@pytest.mark.skip` / `t.Skip()` | `skipped-test` |
-| You wrote an empty `catch {}` or `except: pass` | `hack-workaround` |
-| You wrote `throw new Error("not implemented")` / `unimplemented!()` / `panic!("TODO")` / `raise NotImplementedError` | `deferred-implementation` |
+| You wrote an empty `catch {}` / `except: pass` / **trivial catch (`catch (e) { console.log(e); }`, `except: print(e)`)** / **`.catch(() => {})` ignored Promise rejection** / **`_ = err` Go-style ignore** | `hack-workaround` |
+| You wrote `throw new Error("not implemented")` / `unimplemented!()` / **`todo!()`** / `panic!("TODO")` / **`panic("not implemented")` Go** / `raise NotImplementedError` / **bare `pass` as Python function body** | `deferred-implementation` |
 | You said in chat: "I'll handle X later", "skipping for now", "not in this scope", "we should come back to this" | `deferred-implementation` (or matching type) |
 | The user said: "skip that", "not worth fixing", "do that later", "park it" | matching type |
 | You observed duplicated logic and didn't DRY it | `duplicated-code` |
 | You called a deprecated API instead of migrating | `deferred-implementation` |
+| **You disabled a lint check** (`eslint-disable-next-line`, `# noqa`, `# pylint: disable`, `# type: ignore[unused]`) **without a clear justification comment** | `hack-workaround` (or `type-loosened` for type-related disables) |
+| **You left a debug log** (`console.log("debug …")`, `print("…")`, `dbg!()`) **in code that isn't a logging path** | `hack-workaround` |
+| **You hardcoded a value that should be config** (URL, IP, port, magic number, file path) **in code that isn't a constants module** | `hack-workaround` |
+| **You wrote a mock implementation in a prod path** (returning hardcoded test data, stubbed function returning `null`/`{}` where real logic was expected) | `deferred-implementation` |
+| **You wrote a multi-line block of commented-out code** (more than ~3 lines) | `hack-workaround` |
 
 The triggers above are English. Mixed-language repos still capture English deferrals correctly; non-English equivalents are captured only when your language understanding maps them to the same intent. This is acknowledged drift, not a bug — Phase 4 hardening item.
 
@@ -226,6 +235,26 @@ If `/un-punt` is invoked **and** `.un-punt/items/` is empty (or missing), this i
 6. Offer: *"Want me to sweep the high-confidence ones now?"*
 
 If the user invoked `/un-punt` and items already exist, **don't** re-inventory. Fall through to wrap-up suggestion or sweep planning.
+
+### Promoting cold-start items to fix-eligible
+
+All cold-start captures land at `confidence: 0.4` (recovered intent). The contract thresholds (typically 0.75–0.95 per type) are well above 0.4, so every cold-start item surfaces as a flag, not a fix, on the next sweep — by design.
+
+To convert a cold-start flag into a fix-eligible item:
+
+1. **Read the item file** at `.un-punt/items/<id>.md`.
+2. **Verify intent** — the body's `## Why deferred` was inferred from a comment. Decide whether you (or the user) actually want the fix as described. If not, the item should be `dismissed` via the lifecycle table, not promoted.
+3. **Verify scope** — is the fix mechanical, single-file, well-scoped? Cold-start can't always tell.
+4. **Verify test coverage** — does the area have tests that will validate the fix?
+5. **If all three check out, raise `confidence` in the frontmatter** to a value at or above the contract threshold for the item's type:
+   - `deferred-implementation` / `hack-workaround` / `duplicated-code` / `other`: `0.85` or higher
+   - `type-loosened`: `0.80` or higher
+   - `skipped-test`: `0.75` or higher
+6. **Update `updated_at` in frontmatter** to the current ISO-8601 UTC timestamp.
+7. **Append a `confidence-raised` row to the lifecycle table** (per `snippets/lifecycle.md`) with `Reference: cold-start triage 2026-MM-DD`.
+8. **The next sweep will attempt the fix** — verifier-gated and disposition-prompt-gated as usual.
+
+The `report.md` from a cold-start sweep typically nominates the most promotable items by ID (the mechanical, single-file ones). Use those as your starting point.
 
 ---
 
