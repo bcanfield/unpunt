@@ -488,6 +488,11 @@ Lessons from the May 2026 sloppiness:
 | **Q5c — USER GATE — architecture decision** | 2026-05-02 | claude proposed; user confirmed (Candidate A) | ✓ completed | [v2-plan §Q5c](v2-plan.md#q5c--2026-05-02--user-gate-cleared--candidate-a-selected-claude-code-only-3-hooks-agentsmd-primer-future-lift-to-bc-documented-q6-chunked-into-6-implementation-sessions) · full: [research/Q5c-architecture-decision.md](research/Q5c-architecture-decision.md) |
 | **Q8a — USER GATE — minor findings disposition** | 2026-05-02 | claude proposed; user confirmed (all as proposed) | ✓ completed | [v2-plan §Q8a](v2-plan.md#q8a--2026-05-02--user-gate-cleared--5-minor-findings-dispositioned-2-fix-in-v02-contract-template--confidence-promotion-docs-2-defer-to-v02xv03-top-3-areas--refused-section-enumeration-1-defer--known-limitation-line-drift) · full: [research/Q8a-minor-findings-disposition.md](research/Q8a-minor-findings-disposition.md) |
 | **Q6.1 — Hook scripts (3 files)** | 2026-05-02 | claude (implementation) | ✓ completed | [v2-plan §Q6.1](v2-plan.md#q61--2026-05-02--hook-scripts-shipped-3-files-280-lines-bash-all-11-smoke-tests-pass-performance-180-355ms-per-hook-well-under-sub-second-budget-sketch-ii-compliance-verified) · files at `core/hooks/{session-start,post-tool-use,user-prompt-submit}.sh` |
+| **Q6.2 — CLI hook-merging extension** | 2026-05-02 | claude (implementation) | ✓ completed | commit `be75cb7` |
+| **Q6.3 — Adapter settings.json hooks + build artifact** | 2026-05-02 | claude (implementation) | ✓ completed | commit `7f9b6d2` |
+| **Q6.4 — SKILL widening + confidence promotion** | 2026-05-02 | claude (implementation) | ✓ completed | commit `1db48a2` |
+| **Q6.5 — Contract template type vocab fix** | 2026-05-02 | claude (implementation) | ✓ completed | commit `0b3e1cb` |
+| **Q6.6 — AGENTS.md primer + Decision #21 + Phase 1 + B8 + skill brief** | 2026-05-02 | claude (implementation) | ✓ completed | commit `d70400d` · [v2-plan §Q6 series complete](v2-plan.md#q6-series-complete--2026-05-02--v02-implementation-shipped-across-6-chunks--6-commits--600-loc) |
 
 ---
 

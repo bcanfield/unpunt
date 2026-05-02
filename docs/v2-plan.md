@@ -252,6 +252,36 @@ If any of 9–12 fails: the failure is much narrower than v0.1's foundation crac
 
 > Each Q-session appends a single paragraph here when it completes. Format: `### Q<N> — <date> — <one-line headline>` followed by 2–6 sentences of outcome + citation trail. This section is the canonical record of decisions; the rest of this doc is the framing.
 
+### Q6 series complete — 2026-05-02 — v0.2 implementation shipped across 6 chunks / 6 commits / ~600 LOC
+
+| Chunk | Commit | Files | LOC |
+|---|---|---|---|
+| Q6.1 — Hook scripts | (committed before Q6.2) | `core/hooks/{session-start,post-tool-use,user-prompt-submit}.sh` | ~280 |
+| Q6.2 — CLI hook-merging | `be75cb7` | `packages/cli/src/{install,uninstall,util}.ts` | ~130 |
+| Q6.3 — Adapter settings.json hooks block + build artifact | `7f9b6d2` | `adapters/claude-code/settings.json` + built hooks dir | ~40 |
+| Q6.4 — SKILL widening + confidence promotion subsection | `1db48a2` | `core/skill/SKILL.body.md` + built `SKILL.md` | ~60 |
+| Q6.5 — Contract template type vocabulary fix | `0b3e1cb` | `core/skill/reference/contract-template.md` + built copy | ~20 |
+| Q6.6 — AGENTS.md primer + 4 docs updates + CLI primer-copy | `d70400d` | `adapters/claude-code/AGENTS.md.template` + `packages/cli/src/install.ts` + `docs/{05,06,07,08}-*.md` | ~150 |
+
+**v0.2 ship contents** (per Q5c Candidate A):
+
+- 3 hook scripts (Sketch (ii) compliant — no content classification): SessionStart loads activation reminder, PostToolUse on Edit/Write/MultiEdit emits structural-pre-filtered capture nudge, UserPromptSubmit detects wrap-up phrases. All under 360ms per hook (Q1d sub-second budget honored).
+- CLI extension to merge `hooks` block into `~/.claude/settings.json` (manifest version bumped to v2; v1 manifests still uninstall cleanly).
+- Adapter `settings.json` hooks block registering the 3 scripts at `$HOME/.claude/skills/un-punt/hooks/...`.
+- SKILL body widened with ~5 long-tail trigger rows + "examples are not exhaustive" framing line (Q4b verdict) + Confidence promotion subsection (Q8a finding #3).
+- Contract template fixed (added `hack-workaround` + `other` thresholds; removed orphan types `missing-edge-case`/`deprecated-api`/`dead-code`/`doc-additions`; documented type-not-in-enum fallback).
+- AGENTS.md primer template + CLI step that copies it to `<cwd>/AGENTS.md` on install (skip if exists).
+- Decision #21 added to design register (full chose/alternatives/why/tradeoff/supersession entry).
+- Phase 1 build plan updated: "No hooks at MVP" → "hooks at MVP per #21".
+- B8 risk row annotated MATERIALIZED + mitigated via Decision #21.
+- Skill brief updated to clarify hooks supplement (don't replace) the skill body.
+
+**Constraints check (final)**: Decision 1 ✓ (markdown), Decision 2 ✓ (Sketch ii — agent classifies), Decision 4 ✓ (skill is IP), Decision #21 ✓ (this is its implementation), Decision 14 ✓ (refusal layer untouched), Decision 15 ✓ (no MCP), no infrastructure ✓ (stateless event scripts), cross-platform thesis ⚠ (intentionally Claude-Code-only at v0.2 launch per user's Q5c choice; future-lift to Cursor + Codex documented).
+
+**TypeScript clean** at every chunk; smoke tests passed; no regressions to cold-start path.
+
+**v0.2 ready to install for Q7 re-dogfood.** Next session: Q7a (validation script).
+
 ### Q6.1 — 2026-05-02 — Hook scripts shipped (3 files, ~280 lines bash). All 11 smoke tests pass; performance 180–355ms per hook (well under sub-second budget). Sketch (ii) compliance verified
 
 **Implementation chunk** per Q5c. Files written from scratch (May 1 drafts had been deleted from disk; clean slate avoided importing the Sketch-(iii) anti-pattern from `post-tool-use.sh`). All three at `core/hooks/`:
