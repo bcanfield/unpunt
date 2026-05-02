@@ -40,6 +40,72 @@ For implementation sessions (Q6 only), steps 1–6 stay the same; step 7 becomes
 - 7b. Test locally (smoke test before any cross-system effects)
 - 7c. Mark the chunk's task completed
 
+### Deliverable size — when to split into a separate file
+
+Q1a (the pilot) produced a ~400-line deliverable that doesn't fit the "one paragraph per session" v2-plan format. Codifying the pattern that worked:
+
+- **If the deliverable fits in 1–2 paragraphs**: put it directly in `v2-plan.md` "Research outcomes" section. Done.
+- **If the deliverable is bigger** (catalog, comparison matrix, design sketches, decision-register draft): write it to `docs/research/Q<id>-<slug>.md`, then **summarize in 1 paragraph** under v2-plan's "Research outcomes" with a link. The session log table in this doc gets a row pointing to both.
+
+The full deliverable is the source of truth; the v2-plan paragraph is the digestible index entry.
+
+### Source-conflict resolution
+
+When two sources disagree on a fact (e.g., agent says event X has 18 entries; skill says 9):
+
+1. **Default to the canonical/broader source** for catalogs (event lists, schema fields, capability surfaces).
+2. **Default to the narrower/more-opinionated source** for idiomatic patterns (when to use what, common anti-patterns).
+3. **Cite both sources** in the deliverable; explicitly call out the conflict in a sentence.
+4. **For disputed details that affect a downstream architecture decision**: re-validate at the start of Q5c against the canonical docs URL.
+
+Don't silently pick one source and discard the other — the disagreement is itself research signal.
+
+### Constraint-check "N/A this session" is acceptable
+
+Some sessions are pure capability discovery (Q1, Q2 series). They don't make architectural choices; they catalog what's possible. For these:
+
+- Mark constraint-check rows as **"N/A this session — constraints bind in Q5c"** explicitly.
+- Don't manufacture fake compliance statements when no constraint actually applies.
+- Constraint-check failures only matter when a session is *proposing* (Q3, Q4 synthesis; Q5 architecture decision; Q6 implementation).
+
+This avoids ritualistic check-the-box behavior that buries real signal.
+
+### Methodology visibility in parallel-batch responses
+
+When running 2+ sessions in a single response (parallel agent fan-out, or back-to-back synthesis like Q3b+Q4b), the 7-step structure is naturally baked into deliverable files but easy to compress out of the user-facing message. **Bar**: the user-facing message must at minimum enumerate framings + sources upfront for each session. Quality gates can be summarized at the end ("all 6 gates ✓ for both sessions") rather than enumerated per-session. The deliverable files remain the audit trail.
+
+### "Implications for downstream sessions" sub-section
+
+Recommended (not required) for synthesis sessions that hand off to or feed into subsequent Q-sessions. Concrete pattern: a final section listing each downstream session by ID with a one-sentence note on what this session's outcome locks in / unlocks for that session. Q3c → Q5a hand-off was materially cleaner because of this pattern. Add to deliverable when ≥2 downstream sessions are affected.
+
+### User-confirmation-gate hygiene
+
+When a session is upstream of a user-confirmation gate (Q5c, Q8a, pre-Q7b), the session must **enumerate options, not collapse to a verdict**. The user gate exists precisely to make the choice; pre-emptive collapse robs the user of the choice. Concrete rule: in Q5a (architecture candidates) and Q5b (comparison matrix), never write "the answer is X." Write "candidates A, B, C; matrix shows A dominates B; A and C are frontier options; user picks at Q5c." The Q3c deliverable's "the architecture is essentially decided" framing was borderline — acceptable for a decision-supersession session that's not directly upstream of the gate, but flagged here as the kind of phrasing to avoid when one step closer to the gate.
+
+### Pending re-validations
+
+When a session flags a fact for later re-validation (per the source-conflict resolution rule), add a row to the table below so it doesn't get lost in deliverable files. Each row: what to verify, who flagged it, what session needs the verification done before it.
+
+| Item to re-verify | Source-conflict | Flagged by | Required-by session | Status |
+|---|---|---|---|---|
+| `updatedToolOutput` mechanism on PostToolUse — does it exist? | Q1a's agent claimed v2.1.121 added it; Q1b's same agent (continuation) reported it as undocumented | Q1b | Q5c (architecture decision) | ✓ resolved 2026-05-02 — WebFetch against canonical docs (https://code.claude.com/docs/en/hooks.md) confirms **NOT documented**. Q1b's reading was correct; Q1a's agent claim was wrong. PostToolUse JSON output fields: `continue`, `stopReason`, `suppressOutput`, `systemMessage`, `decision`, `reason`, `additionalContext` (inside `hookSpecificOutput`). No `updatedToolOutput`. v0.2 hooks must NOT depend on it. |
+
+### Cross-cutting finding pattern
+
+When 3+ sessions in a parallel batch surface a common load-bearing insight that doesn't fit cleanly into any single session's outcome paragraph, **write it as its own outcome paragraph** in `v2-plan.md` "Research outcomes" with a header like *"Cross-cutting finding from Q<batch> (date)"*, and add a corresponding row to this doc's session log marked **Cross-cutting**. Don't bury the synthesis in one of the contributing sessions — it will be invisible to future readers scanning by Q-number. The row's owner is `claude (synthesis across N sessions)`.
+
+This pattern was adopted retroactively after the Q1+Q2 batch surfaced the "hooks are now cross-platform standard" finding that would otherwise have been distributed across 5 separate paragraphs.
+
+### Agent reuse — prefer SendMessage over respawn
+
+When multiple sessions consult the same source pool (e.g., Q1a, Q1b, Q1c all consult the `claude-code-guide` agent's reading of Claude Code docs):
+
+1. **Spawn the agent ONCE in the first session** with a memorable `name` parameter for SendMessage routing.
+2. **Continue via SendMessage** in subsequent sessions — the agent already has the docs in context; respawning makes it re-fetch.
+3. **Spawn a fresh agent only when** the source pool genuinely differs (e.g., Q2a needs Codex docs, not Claude Code docs).
+
+This was a Q1a oversight (no name set on initial spawn); fixed prospectively for Q1b and onward.
+
 ---
 
 ## Quality gates (what every session deliverable must contain)
@@ -404,6 +470,22 @@ Lessons from the May 2026 sloppiness:
 | Session | Date | Owner | Status | Outcome |
 |---|---|---|---|---|
 | Q1a — Hook events catalog | 2026-05-02 | agent:claude-code-guide + Skill plugin-dev:hook-development + claude (synthesis) | ✓ completed | [v2-plan §Q1a](v2-plan.md#q1a--2026-05-02--claude-code-emits-18-hook-events-with-two-type-modes-command-and-prompt-and-two-config-formats-plugin-hooksjson-vs-settingsjson-direct) · full catalog: [research/Q1a-hook-events-catalog.md](research/Q1a-hook-events-catalog.md) |
+| Q1b — Hook output mechanisms decision tree | 2026-05-02 | agent:cc-docs (continued from Q1a) | ✓ completed | [v2-plan §Q1b](v2-plan.md#q1b--2026-05-02--10-hook-intents-map-to-a-small-set-of-mechanisms-additionalcontext-is-the-workhorse-decision-block-blocks-specific-actions-continue-false-halts-session) · full: [research/Q1b-hook-output-mechanisms.md](research/Q1b-hook-output-mechanisms.md) |
+| Q1c — Plugin install vs skill-direct hook registration | 2026-05-02 | agent:cc-docs (continued from Q1a, combined with Q1b) | ✓ completed | [v2-plan §Q1c](v2-plan.md#q1c--2026-05-02--skill-direct-vs-marketplace-install-patterns-differ-in-hook-auto-discovery-and-claude_plugin_root-availability-recommendation-is-to-stay-skill-direct--extend-cli-for-v02) · full: [research/Q1c-install-paths.md](research/Q1c-install-paths.md) |
+| Q2a — Codex hook analogues | 2026-05-02 | agent:codex-docs (general-purpose, web research) | ✓ completed | [v2-plan §Q2a](v2-plan.md#q2a--2026-05-02--codex-shipped-near-identical-hook-system-to-claude-code-cli-01240-april-2026-stable-un-punt-ports-cleanly-stop-semantics-actually-better-than-claude-codes) · full: [research/Q2a-codex-analogues.md](research/Q2a-codex-analogues.md) |
+| Q2b — Cursor hook analogues | 2026-05-02 | agent:cursor-docs (general-purpose, web research) | ✓ completed | [v2-plan §Q2b](v2-plan.md#q2b--2026-05-02--cursor-17-shipped-hooks-sept-2025-and-cursor-24-shipped-skills-using-the-same-skillmd-open-standard-as-claude-code-jan-2026-un-punts-skill-body-ports-unchanged) · full: [research/Q2b-cursor-analogues.md](research/Q2b-cursor-analogues.md) |
+| Q2c — Copilot/Gemini-CLI/Aider analogues | 2026-05-02 | agent:other-platforms (general-purpose, web research) | ✓ completed | [v2-plan §Q2c](v2-plan.md#q2c--2026-05-02--tiered-adapter-strategy-emerges-tier-1-full-hooks-claude-code-cursor-codex-gemini-cli-copilot-vs-code-tier-2-partial-copilot-cli-tier-3-primer-only-aider-agentsmd-is-the-universal-floor) · full: [research/Q2c-other-platforms.md](research/Q2c-other-platforms.md) |
+| **Cross-cutting** — Q1+Q2 batch finding | 2026-05-02 | claude (synthesis across 5 sessions) | ✓ completed | [v2-plan §Cross-cutting finding from Q1+Q2 batch](v2-plan.md#cross-cutting-finding-from-q1q2-batch-2026-05-02) |
+| Q3a — Decision 1 (markdown) re-read | 2026-05-02 | claude (synthesis) | ✓ completed | [v2-plan §Q3a](v2-plan.md#q3a--2026-05-02--decision-1-markdown-not-sqlite-fully-preserved-by-all-v02-candidate-architectures-strengthened-not-weakened-by-q1q2-evidence) · full: [research/Q3a-decision-1-reread.md](research/Q3a-decision-1-reread.md) |
+| Q4a — Classification line + 3 hook design sketches | 2026-05-02 | claude (synthesis) | ✓ completed | [v2-plan §Q4a](v2-plan.md#q4a--2026-05-02--the-classification-line-which-events-fire--mechanical-hook-owns-it-what-the-event-means--interpretive-agent-owns-it-recommend-sketch-ii--structural-pre-filter-no-content-classification) · full: [research/Q4a-classification-line.md](research/Q4a-classification-line.md) |
+| Q3b — Decision 2 (agent is engine) re-read + Q4a hand-off questions resolved | 2026-05-02 | claude (synthesis) | ✓ completed | [v2-plan §Q3b](v2-plan.md#q3b--2026-05-02--decision-2-binds-against-sketch-iv-prompt-hook--violates-2-of-6-why-bullets-cleanly--1-partially-sketch-ii-only-for-v02-sketch-iv-is-a-v03-escape-hatch-requiring-an-explicit-decision-register-supersession) · full: [research/Q3b-decision-2-reread.md](research/Q3b-decision-2-reread.md) |
+| Q4b — Long-tail signal coverage check | 2026-05-02 | claude (synthesis) | ✓ completed | [v2-plan §Q4b](v2-plan.md#q4b--2026-05-02--6-type-enum-stays-closed-trigger-examples-should-widen-with-5-well-chosen-new-rows--an-examples-are-not-exhaustive-framing-line) · full: [research/Q4b-long-tail-signal-coverage.md](research/Q4b-long-tail-signal-coverage.md) |
+| Q3c — Decision 13 re-read + Decision #21 supersession draft | 2026-05-02 | claude (synthesis) | ✓ completed | [v2-plan §Q3c](v2-plan.md#q3c--2026-05-02--decision-13-partially-superseded-bullets-2--3-fall-auto-invocation--cross-platform-claims-bullets-1--4-stand-decision-21-drafted-in-full) · full: [research/Q3c-decision-13-reread.md](research/Q3c-decision-13-reread.md) |
+| **Methodology audit** — at Q-research → Q-architecture boundary | 2026-05-02 | claude (cross-cutting review) | ✓ completed | [v2-plan §Methodology audit](v2-plan.md#methodology-audit--2026-05-02--12-sessions-methodology-working-4-minor-refinements-codified-into-v2-research-planmd) — 4 refinements codified inline in this doc |
+| `updatedToolOutput` re-validation | 2026-05-02 | claude (WebFetch against canonical docs) | ✓ completed | [v2-plan §updatedToolOutput re-validation](v2-plan.md#updatedtooloutput-re-validation--2026-05-02--confirmed-undocumented-q1bs-reading-was-correct) — tracker row updated above |
+| Q5a — Architecture candidates enumeration | 2026-05-02 | claude (synthesis) | ✓ completed | [v2-plan §Q5a](v2-plan.md#q5a--2026-05-02--5-v02-architecture-candidates-enumerated-a-minimum-viable-claude-code-only-b-skillmd-adopters-claude-codecursorcodex-c-full-tiered-all-6-platforms-d-defense-in-depth-a-or-b--frontmatter-mitigations-e-agentsmd-primer-only--no-hooks) · full: [research/Q5a-architecture-candidates.md](research/Q5a-architecture-candidates.md) |
+| Q5b — Comparison matrix + frontier identification | 2026-05-02 | claude (synthesis) | ✓ completed | [v2-plan §Q5b](v2-plan.md#q5b--2026-05-02--frontier-identified-a-b-c-e-d-dominated-the-choice-axis-how-much-to-ship-at-v02-vs-defer-to-v03--02x) · full: [research/Q5b-comparison-matrix.md](research/Q5b-comparison-matrix.md) |
+| **Q5c — USER GATE — architecture decision** | 2026-05-02 | claude proposed; user confirmed (Candidate A) | ✓ completed | [v2-plan §Q5c](v2-plan.md#q5c--2026-05-02--user-gate-cleared--candidate-a-selected-claude-code-only-3-hooks-agentsmd-primer-future-lift-to-bc-documented-q6-chunked-into-6-implementation-sessions) · full: [research/Q5c-architecture-decision.md](research/Q5c-architecture-decision.md) |
 
 ---
 
