@@ -57,7 +57,7 @@ Ship the smallest end-to-end thing.
 **In scope**:
 - **Skill** — polished from Phase 0
 - **Markdown spec** — locked at v1
-- **Claude Code plugin** — manifest + skill placement + `permissions.deny` in `settings.json` for refusal paths. Skill auto-exposes as `/un-punt`. **No hooks at MVP** — skill loads via description match. Add `SessionStart` / `Stop` hooks in Phase 2 *only* if eval shows description-match alone is unreliable.
+- **Claude Code plugin** — manifest + skill placement + `permissions.deny` in `settings.json` for refusal paths. Skill auto-exposes as `/un-punt`. **SessionStart + PostToolUse + UserPromptSubmit hooks at MVP per Decision #21** (the Phase 2 contingency this bullet originally documented has triggered — May 2026 punt-board dogfood Probes 1, 2, 4, 6, 7, 8 showed description-match auto-loading + agent-vigilance alone is unreliable). Hooks emit `additionalContext` per Q4a Sketch (ii) — structural pre-filter only, no content classification (Decision 2 preserved). See [`research/Q3c-decision-13-reread.md`](research/Q3c-decision-13-reread.md) for the supersession rationale.
 - **Cold-start inventory flow** — first-run guided scan
 - **Thin CLI** — three commands: `install`, `status`, `uninstall`
 - **Installer** — `npx un-punt install claude-code` and/or `brew install un-punt`
@@ -66,7 +66,7 @@ Ship the smallest end-to-end thing.
 
 **Out of scope**: Codex/Cursor adapters, pre-break flow, per-repo overrides, MCP server, GitHub App, scheduled runs, eng-leader dashboard.
 
-**If hooks become necessary** (Phase 0d shows description-match misses too much): we ship as a Claude Code *plugin* instead of standalone skill. Side effect: the slash command becomes namespaced (`/un-punt:un-punt`). Treat that as a v0.2 break, document it in the README, and update [`02-experience.md`](02-experience.md) and [`11-checklist.md`](11-checklist.md) accordingly.
+**Hooks decision** (originally framed as "if necessary"): per Decision #21, hooks are now part of MVP. v0.2 stays skill-direct (CLI extends to merge `hooks` block into `~/.claude/settings.json` per Q1c install-paths research) rather than converting to Claude Code marketplace plugin — preserves the un-namespaced `/un-punt` slash command and avoids marketplace.json hosting infrastructure (consistent with Decision 4 "skill is the IP, no service"). Future-lift to marketplace plugin in v0.3 if discoverability becomes a friction point.
 
 **Friendly tester pool**: 5–10 people from existing network (Discord, X/Bluesky DMs, prior collaborators). Reach out the week before launch so they're primed to install on Day 7. If we don't have 5 plausible names by Phase 0e, that's a signal to fix audience before launch.
 

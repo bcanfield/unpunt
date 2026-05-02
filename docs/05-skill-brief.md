@@ -14,7 +14,7 @@ Per Anthropic's authoring guidance, only frontmatter metadata is preloaded; the 
 
 Multi-platform (Claude Code first, Codex/Cursor later). Per-platform variants are minor; substance is shared.
 
-> **Slash-command form.** Bare `/un-punt` for the standalone-skill MVP. If we end up shipping as a plugin to access hooks, it becomes `/un-punt:un-punt` — see [`06-build-plan.md`](06-build-plan.md) ("If hooks become necessary").
+> **v0.2 update — hooks supplement the skill, they don't replace it.** Per Decision #21 (added May 2026 after the v0.1 dogfood showed description-match auto-loading is unreliable), v0.2 ships a SessionStart + PostToolUse + UserPromptSubmit hook trio that **loads the skill body into context reliably + nudges the agent at the right deterministic events**. The hooks do NO content classification — they route events; the agent (still the engine per Decision 2) classifies content per the skill body's rules. **The skill body remains the IP and source of truth.** Hooks are thin event-routing scripts (~280 LOC bash total). v0.2 keeps the bare `/un-punt` slash-command form (skill-direct install via the CLI; no marketplace plugin conversion).
 
 ---
 

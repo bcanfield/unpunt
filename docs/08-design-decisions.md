@@ -363,6 +363,57 @@ Marketing can still use debt-related language for the eng-leader narrative ("the
 
 ---
 
+## 21. Hooks for skill activation + structural pre-filter (supersedes Decision 13 bullets 2 + 3)
+
+**Chose**: v0.2 ships **SessionStart**, **PostToolUse** (matcher: `Edit|Write|MultiEdit`), and **UserPromptSubmit** hooks for Claude Code. Hooks are stateless event scripts that:
+
+1. **Load the skill body into the agent's context on SessionStart** (regardless of description-match outcome) by emitting `hookSpecificOutput.additionalContext` containing the skill's activation reminder.
+2. **Apply structural pre-filtering on PostToolUse** — skip files matching `__generated__/`, `node_modules/`, `dist/`, `.un-punt/`, `.next/`, `.venv/`, `__pycache__/`, gitignored paths — then emit `additionalContext` reminding the agent to inspect the diff and apply capture rules from the skill body. **The hook does NOT pre-classify content** (no regex over file contents; that would violate Decision 2 per Q3b research).
+3. **Detect wrap-up phrases on UserPromptSubmit** (`done`, `looks good`, `ship it`, `ready to ship`, `wrap up`, `switching to`, `moving on`, etc.) and emit `additionalContext` prompting the agent to offer a sweep per the skill's Suggestion rules section.
+
+The skill body at `core/skill/SKILL.body.md` remains the IP and source of truth for behavior. Hooks do not classify content; the agent does. Hooks make the skill body's rules reach the agent reliably at deterministic events.
+
+**Adapter coverage for v0.2**:
+- **Claude Code**: `~/.claude/settings.json` `hooks` block merged by the CLI install (extends the existing `permissions.{allow,ask,deny}` merge logic per `packages/cli/src/install.ts`); hook scripts live at `~/.claude/skills/un-punt/hooks/`.
+- **All other platforms**: `AGENTS.md` primer template (universal floor for graceful degradation); full hook adapters deferred to v0.2.x (Cursor, Codex per Q2 catalogs) or v0.3+ (Copilot, Gemini, Aider per Q2c tier strategy).
+
+**Alternatives**:
+- **(Decision 13 path, now superseded for v0.2)**: rely on description-match auto-loading + agent vigilance during normal work. Empirically failed in May 2026 dogfood (Probes 1, 2, 7).
+- **Sketch (iii) from Q4a research (rejected as Decision 2 violation)**: hook greps for capture-pattern set, agent acts on findings. Codified as the canonical anti-pattern. The May 1 implementation drift this entry exists to prevent.
+- **Sketch (iv) from Q4a (deferred to v0.3)**: `type: "prompt"` hook invokes the model for classification at each event. Per Q3b, violates Decision 2 bullets 3 + 4 (adds LLM cost; adds prompt to maintain). Available as escape hatch if v0.2 re-dogfood shows Sketch (ii) compliance < 60%; would require its own decision-register entry.
+- **`when_to_use` and `paths` frontmatter fields** (Decision 13 April 2026 amendment): low-cost description-match mitigations; Q5b judged dominated for v0.2 (uncertain efficacy in presence of hooks; added maintenance surface). Available as v0.3 add-on if needed.
+
+**Why**:
+- **Decision 13's bullet 2 was wrong empirically.** Per dogfood Probes 1, 2, 7: description-match auto-loading does not fire on coding-topic conversations even when the skill description is well-formed and within the 1,536-char budget. The Phase 2 contingency `06-build-plan.md` documented (*"Add SessionStart / Stop hooks in Phase 2 only if eval shows description-match alone is unreliable"*) has triggered.
+- **Decision 13's bullet 3 was wrong empirically.** Per Q2 catalogs ([`docs/research/Q2a-codex-analogues.md`](research/Q2a-codex-analogues.md), [`Q2b-cursor-analogues.md`](research/Q2b-cursor-analogues.md), [`Q2c-other-platforms.md`](research/Q2c-other-platforms.md)): Cursor 1.7 (Sept 2025), Codex 0.124.0 (April 2026), Copilot CLI (Feb 2026), and Gemini CLI all shipped stable hook systems with Claude-Code-compatible JSON-stdin/JSON-stdout contracts. Hooks are now THE cross-platform standard primitive, not a Claude-Code lock-in. AGENTS.md is the universal floor for the one platform without hooks (Aider).
+- **Decision 13's bullets 1 + 4 still hold.** Skill body is the IP; hooks remain available for refusal per Decision 14. Decision #21 does not touch these.
+- **Decision 2 preserved (Q3b verdict).** Sketch (ii) — structural pre-filter, agent does classification — preserves all 6 of Decision 2's why-bullets. Hooks route events; the agent classifies content.
+- **Decision 1 preserved (Q3a verdict).** Hooks parse `.un-punt/items/` markdown for state queries; this is not a Decision 1 violation since Decision 1 prohibits SQLite as the *storage substrate*, not non-agent processes parsing the markdown substrate.
+- **SKILL body widening complements hooks** per Q4b research: ~5 added long-tail trigger rows + an explicit "examples are not exhaustive" framing line make the skill body recall richer signals (swallowed exceptions, mocks, hardcoded values, disabled lints, debug logs). The widened SKILL body is the v0.2 mechanism for long-tail recall under Sketch (ii).
+
+**Tradeoff**:
+- **Hook configuration syntax differs per platform.** Adapter glue per platform; the hook scripts themselves can be kept cross-platform.
+- **Sketch (ii)'s reliance on agent compliance is the same v0.1 risk** that Decision 2's tradeoff bullet acknowledged. Hooks reduce the gap (skill loaded reliably + reminders fired); they don't close it to zero. Q7 re-dogfood validation must measure compliance explicitly.
+- **Hot-reload limitation**: hook configuration changes require Claude Code restart. Iteration during v0.2 dev is slower than skill-body-only changes were.
+- **Bypass mode (`--dangerously-skip-permissions`)**: hooks are silently disabled per Decision 14's GH-issues evidence. Bypass-mode users get the v0.1 experience. Document as known limitation.
+- **Cross-platform parity at v0.2 ship is intentionally limited to Claude Code** per user's "claude code first" decision in Q5c. Future-lift to Cursor (~80 LOC) and Codex (~70 LOC) documented in [`docs/research/Q5c-architecture-decision.md`](research/Q5c-architecture-decision.md).
+
+**Concrete supersession of Decision 13**:
+- Bullet 1 (skills are the right primitive): STILL HOLDS unchanged.
+- Bullet 2 (auto-invocation works when description is well-written): SUPERSEDED. SessionStart hook compensates.
+- Bullet 3 (cross-platform — hooks are Claude-Code-specific): SUPERSEDED. Hooks are cross-platform standard.
+- Bullet 4 (hooks remain available for refusal): STILL HOLDS unchanged. Decision 14 covers refusal independently.
+
+**What this decision does NOT do**:
+- Does not reverse Decision 1 (markdown stays). Per Q3a re-read.
+- Does not reverse Decision 2 (agent is engine). Per Q3b re-read. Sketch (ii) is the explicit Decision-2-preserving design.
+- Does not reverse Decision 4 (skill is the IP). The skill body is unchanged in role; hooks are the activation/nudging layer.
+- Does not reverse Decision 13 fully — bullets 1 + 4 still hold.
+- Does not adopt `type: "prompt"` hooks (Sketch iv from Q4a). Deferred to v0.3.
+- Does not change the cold-start path (worked perfectly in v0.1 dogfood: 18/18 recall, 0 FP).
+
+---
+
 ## When NOT to apply these decisions
 
 Reconsider if:

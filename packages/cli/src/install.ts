@@ -196,12 +196,34 @@ export async function install(rawPlatform: string): Promise<void> {
     console.log(chalk.dim(`• Contract already exists at ${cwdContract} — left intact`));
   }
 
-  // 5. Success guidance (3 lines).
+  // 5. Copy AGENTS.md primer into <cwd>/AGENTS.md if not present.
+  // Per Decision #21 (Q3c): AGENTS.md is the universal cross-platform floor
+  // for graceful degradation on platforms without un-punt hook adapters
+  // (Codex/Cursor 0.2.x, Copilot/Gemini/Aider v0.3+). For Claude Code, this
+  // is redundant-but-harmless safety-net (hooks already load the same content).
+  // Skip silently if user already has an AGENTS.md (don't risk clobbering
+  // their content; user can manually paste the primer if they want it).
+  const adapterAgentsTemplate = resolve(ADAPTER_ROOT, "AGENTS.md.template");
+  const cwdAgentsMd = resolve(process.cwd(), "AGENTS.md");
+  if (fileExists(adapterAgentsTemplate)) {
+    if (!fileExists(cwdAgentsMd)) {
+      await cp(adapterAgentsTemplate, cwdAgentsMd);
+      console.log(chalk.green(`✓ AGENTS.md primer → ${cwdAgentsMd}`));
+    } else {
+      console.log(
+        chalk.dim(
+          `• AGENTS.md already exists at ${cwdAgentsMd} — left intact (paste primer manually if desired; template at ${adapterAgentsTemplate})`,
+        ),
+      );
+    }
+  }
+
+  // 6. Success guidance (3 lines).
   console.log("");
   console.log(chalk.cyan("Installed."));
-  console.log("  • Restart Claude Code (or open a new session) to load the skill.");
+  console.log("  • Restart Claude Code (or open a new session) to load the skill + hooks.");
   console.log(
-    "  • Capture is silent — no /un-punt needed; the skill triggers on deferral signals.",
+    "  • Hooks fire silently on Edit/Write/MultiEdit + at session start + on user prompts.",
   );
   console.log("  • Run `un-punt status` to see this repo's `.un-punt/` state.");
 }
