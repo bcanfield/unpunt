@@ -12,17 +12,19 @@ You can edit it. The agent reads it once at the start of every sweep — mid-swe
 
 The agent will fix items of these types **only if** the item's `confidence` is at or above the threshold. Below the threshold, the item degrades to a flag (no commit). You can raise any of these; you cannot lower them below the default.
 
+The 6 types below are the **closed enum** the skill captures into (per `SKILL.body.md`). Threshold values reflect the inherent risk of attempting an automated fix per type (lower threshold = more confidence the fix will be safe).
+
 ```yaml
 thresholds:
-  deferred-implementation: 0.85   # TODO with clear single intent
-  type-loosened:           0.80   # any, as any, @ts-ignore, # type: ignore
-  missing-edge-case:       0.80   # only when tests are in place
-  skipped-test:            0.75   # replace .skip / xit with a real test
+  deferred-implementation: 0.85   # TODO with clear single intent, "I'll handle X later"
+  type-loosened:           0.80   # any, as any, @ts-ignore, # type: ignore, : any
+  skipped-test:            0.75   # replace .skip / xit / it.todo with a real test
+  hack-workaround:         0.85   # empty catch, swallowed exception, debug log left in, hardcoded value, mock in prod path, disabled lint
   duplicated-code:         0.85   # dedup within a single module
-  deprecated-api:          0.85   # mechanical migrations
-  dead-code:               0.90   # multiple signals required
-  doc-additions:           0.90   # JSDoc, docstring additions
+  other:                   0.90   # fallback type for signals outside the 6-type enum (rare; should be flagged for skill update)
 ```
+
+**Type-not-in-enum fallback rule**: if an item's frontmatter `type:` field is something not in the list above (e.g., a legacy `missing-edge-case` from an older skill version, or a typo), the agent uses `other`'s threshold (`0.90`) and surfaces the mismatch in the next sweep's `report.md` so the user can re-classify the item.
 
 To raise a threshold for a specific path, override per-glob:
 
