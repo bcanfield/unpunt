@@ -18,13 +18,31 @@ export const CLAUDE_SETTINGS_PATH = resolve(CLAUDE_HOME, "settings.json");
 export const INSTALL_MANIFEST_PATH = resolve(CLAUDE_HOME, "un-punt-install.json");
 
 export interface InstallManifest {
-  version: 1;
+  // v1 = permissions only (pre-Decision-#21).
+  // v2 = permissions + hooks (post-Decision-#21, per Q6.2 in v2-plan).
+  version: 1 | 2;
   installed_at: string;
   added_to_settings: {
     "permissions.allow": string[];
     "permissions.ask": string[];
     "permissions.deny": string[];
   };
+  // v2+ only. Maps hook event name (e.g., "SessionStart", "PostToolUse") to
+  // the command strings we added. On uninstall, find hooks with these
+  // commands and remove only those (preserve user's own hooks).
+  added_hooks?: { [eventName: string]: string[] };
+}
+
+export interface HookCommand {
+  type: "command" | "prompt";
+  command?: string;
+  prompt?: string;
+  timeout?: number;
+}
+
+export interface HookMatcherEntry {
+  matcher?: string;
+  hooks: HookCommand[];
 }
 
 export interface ClaudeSettings {
@@ -33,7 +51,10 @@ export interface ClaudeSettings {
     ask?: string[];
     deny?: string[];
   };
-  // Other top-level keys (hooks, model, etc.) preserved unchanged.
+  hooks?: {
+    [eventName: string]: HookMatcherEntry[];
+  };
+  // Other top-level keys (model, etc.) preserved unchanged.
   [key: string]: unknown;
 }
 

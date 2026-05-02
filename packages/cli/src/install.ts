@@ -10,6 +10,8 @@ import {
   CORE_REFERENCE_ROOT,
   ensureDir,
   fileExists,
+  type HookCommand,
+  type HookMatcherEntry,
   INSTALL_MANIFEST_PATH,
   type InstallManifest,
   writeJsonAtomic,
@@ -109,12 +111,78 @@ export async function install(rawPlatform: string): Promise<void> {
     console.log(chalk.dim(`• Permissions already up-to-date in ${CLAUDE_SETTINGS_PATH}`));
   }
 
+  // 2.5. Merge hooks block from adapter settings into user settings.
+  // Per Decision #21 (Q3c) and Q1c install-path recommendation: skill-direct
+  // installs require the CLI to merge a `hooks` block into ~/.claude/settings.json
+  // (no auto-discovery for skill-direct, unlike marketplace plugins).
+  // Sketch (ii) compliance: we only ROUTE which scripts run on which events;
+  // the scripts themselves emit additionalContext for the agent to act on.
+  const ourHooks: { [eventName: string]: string[] } = {
+    ...(priorManifest?.added_hooks ?? {}),
+  };
+  let totalHooksAdded = 0;
+  if (adapterSettings.hooks) {
+    userSettings.hooks ??= {};
+    for (const [eventName, adapterEntries] of Object.entries(adapterSettings.hooks)) {
+      userSettings.hooks[eventName] ??= [];
+      ourHooks[eventName] ??= [];
+      const existingCommands = new Set<string>();
+      for (const entry of userSettings.hooks[eventName]) {
+        for (const h of entry.hooks ?? []) {
+          if (h.command) existingCommands.add(h.command);
+        }
+      }
+      for (const adapterEntry of adapterEntries) {
+        // For each command in adapter's matcher entry, if not already present
+        // in any user matcher entry for this event, add the entry verbatim and
+        // track the command for uninstall.
+        const newCommands = (adapterEntry.hooks ?? [])
+          .map((h: HookCommand) => h.command)
+          .filter((c): c is string => typeof c === "string" && c.length > 0)
+          .filter((c) => !existingCommands.has(c));
+        if (newCommands.length === 0) continue;
+        userSettings.hooks[eventName].push(adapterEntry);
+        for (const c of newCommands) {
+          existingCommands.add(c);
+          if (!ourHooks[eventName].includes(c)) {
+            ourHooks[eventName].push(c);
+            totalHooksAdded++;
+          }
+        }
+      }
+      // Reclaim case: if a command from the adapter is in user settings but
+      // not in our manifest, claim it (handles "user deleted manifest then
+      // re-installed" same as permissions logic).
+      for (const adapterEntry of adapterEntries) {
+        for (const h of adapterEntry.hooks ?? []) {
+          if (h.command && existingCommands.has(h.command) && !ourHooks[eventName].includes(h.command)) {
+            ourHooks[eventName].push(h.command);
+          }
+        }
+      }
+    }
+  }
+
+  await writeJsonAtomic(CLAUDE_SETTINGS_PATH, userSettings);
+  if (totalHooksAdded > 0) {
+    console.log(
+      chalk.green(
+        `✓ Hooks merged → ${CLAUDE_SETTINGS_PATH} (${totalHooksAdded} hook command(s) added across ${Object.keys(ourHooks).length} event(s))`,
+      ),
+    );
+  } else if (adapterSettings.hooks) {
+    console.log(chalk.dim(`• Hooks already up-to-date in ${CLAUDE_SETTINGS_PATH}`));
+  }
+
   // 3. Update install manifest. Cumulative — preserves the record of every
   // entry we own across re-installs so uninstall can fully reverse.
+  // Bump to v2 if we added any hooks; stay v1-compatible otherwise.
+  const manifestVersion: 1 | 2 = adapterSettings.hooks ? 2 : 1;
   const manifest: InstallManifest = {
-    version: 1,
+    version: manifestVersion,
     installed_at: priorManifest?.installed_at ?? new Date().toISOString(),
     added_to_settings: ourEntries,
+    ...(manifestVersion === 2 ? { added_hooks: ourHooks } : {}),
   };
   await writeJsonAtomic(INSTALL_MANIFEST_PATH, manifest);
 

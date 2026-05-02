@@ -23,10 +23,10 @@ export async function uninstall(): Promise<void> {
   }
 
   const manifest = JSON.parse(await readFile(INSTALL_MANIFEST_PATH, "utf8")) as InstallManifest;
-  if (manifest.version !== 1) {
+  if (manifest.version !== 1 && manifest.version !== 2) {
     console.error(
       chalk.red(
-        `Install manifest version ${manifest.version} unsupported (this CLI handles version 1).`,
+        `Install manifest version ${manifest.version} unsupported (this CLI handles versions 1 and 2).`,
       ),
     );
     process.exit(1);
@@ -45,10 +45,48 @@ export async function uninstall(): Promise<void> {
         userSettings.permissions[key] = after;
         totalRemoved += before.length - after.length;
       }
+      // 1.5. Reverse hooks (v2 manifests only). Walk each tracked event/command
+      // and remove only matching hooks; preserve user's own hooks (Sketch ii
+      // hygiene per Q4a — same surgical-removal pattern as permissions above).
+      let totalHooksRemoved = 0;
+      if (manifest.version === 2 && manifest.added_hooks && userSettings.hooks) {
+        for (const [eventName, ourCommands] of Object.entries(manifest.added_hooks)) {
+          const ours = new Set(ourCommands);
+          if (ours.size === 0) continue;
+          const eventEntries = userSettings.hooks[eventName] ?? [];
+          const filteredEntries = [];
+          for (const entry of eventEntries) {
+            const beforeCount = (entry.hooks ?? []).length;
+            const remainingHooks = (entry.hooks ?? []).filter(
+              (h) => !h.command || !ours.has(h.command),
+            );
+            totalHooksRemoved += beforeCount - remainingHooks.length;
+            // Preserve entry only if it still has hooks (don't leave empty matchers).
+            if (remainingHooks.length > 0) {
+              filteredEntries.push({ ...entry, hooks: remainingHooks });
+            }
+          }
+          if (filteredEntries.length > 0) {
+            userSettings.hooks[eventName] = filteredEntries;
+          } else {
+            delete userSettings.hooks[eventName];
+          }
+        }
+        // If we emptied the hooks object entirely (no user hooks remain),
+        // delete the key — leaves settings.json clean.
+        if (Object.keys(userSettings.hooks).length === 0) {
+          delete userSettings.hooks;
+        }
+      }
       await writeJsonAtomic(CLAUDE_SETTINGS_PATH, userSettings);
       console.log(
         chalk.green(`✓ Reversed permissions in ${CLAUDE_SETTINGS_PATH} (${totalRemoved} entries)`),
       );
+      if (totalHooksRemoved > 0) {
+        console.log(
+          chalk.green(`✓ Reversed hooks in ${CLAUDE_SETTINGS_PATH} (${totalHooksRemoved} hook command(s))`),
+        );
+      }
     }
   }
 
