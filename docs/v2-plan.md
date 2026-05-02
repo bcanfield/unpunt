@@ -252,6 +252,27 @@ If any of 9–12 fails: the failure is much narrower than v0.1's foundation crac
 
 > Each Q-session appends a single paragraph here when it completes. Format: `### Q<N> — <date> — <one-line headline>` followed by 2–6 sentences of outcome + citation trail. This section is the canonical record of decisions; the rest of this doc is the framing.
 
+### Q6.1 — 2026-05-02 — Hook scripts shipped (3 files, ~280 lines bash). All 11 smoke tests pass; performance 180–355ms per hook (well under sub-second budget). Sketch (ii) compliance verified
+
+**Implementation chunk** per Q5c. Files written from scratch (May 1 drafts had been deleted from disk; clean slate avoided importing the Sketch-(iii) anti-pattern from `post-tool-use.sh`). All three at `core/hooks/`:
+
+- **`session-start.sh`** (87 lines) — fires on every session in `.un-punt/`-bearing repo; emits `additionalContext` activation reminder including current items count. Pure structural check (`.un-punt/` exists?); zero classification. No-op outside `.un-punt/` repos.
+- **`post-tool-use.sh`** (94 lines) — fires after Edit/Write/MultiEdit; structural pre-filter on path globs (`__generated__/`, `node_modules/`, `dist/`, etc.) + `git check-ignore`; emits reminder if file in scope. **Critical: zero regex over file content** (Sketch ii compliance per Q4a/Q3b — the May 1 anti-pattern is NOT here).
+- **`user-prompt-submit.sh`** (101 lines) — detects wrap-up trigger phrases per skill body's enumerated list (`done`, `ship it`, `ready to ship`, `wrap up`, `switching to`, `moving on`, etc.); word-boundary anchored to avoid false positives (`redone` ≠ `done`); per-session marker prevents re-asking. Phrase detection is on user-input metadata, not file contents — different from Sketch (iii) per the in-script Sketch (ii) rationale comment.
+
+**Smoke tests**: 11/11 pass.
+- Session-start: silent outside `.un-punt/` ✓; emits JSON inside punt-board with 18 items count ✓.
+- Post-tool-use: silent outside `.un-punt/` ✓; emits JSON for in-scope file ✓; silent for `__generated__/` ✓; silent for `node_modules/` ✓; silent for nonexistent file ✓.
+- User-prompt-submit: silent on non-wrap-up prompt ✓; silent on `redone` (word-boundary check) ✓; emits JSON on `Zone 5 done. Zone 7 done.` with 18 items ✓; silent on second invocation with same `session_id` (per-session marker working) ✓.
+
+**Performance**: session-start 183ms, post-tool-use 255ms, user-prompt-submit 354ms. All sub-second per Q1d budget.
+
+**Constraints**: Decision 1 ✓ (no DB), Decision 2 ✓ (Sketch ii — agent classifies, hook routes), Decision 4 ✓ (skill body unchanged), Decision #21 ✓ (this is its implementation), no infrastructure ✓ (stateless event scripts).
+
+**Side-finding**: while testing, noticed `dogfood-log.md` line in punt-board's `.gitignore` (line 50) is **commented out** — meaning the file is currently tracked when the brief expected it gitignored. Flag for the user; not blocking this chunk; they can decide whether to un-comment the line or accept tracking.
+
+**Next**: Chunk 2 (CLI hook-merging extension — `packages/cli/src/{install,uninstall,util}.ts`). Chunk 1's hooks need to be installed at `~/.claude/skills/un-punt/hooks/` for the settings.json hook commands to point at; Chunk 2 wires that.
+
 ### Q8a — 2026-05-02 — USER GATE CLEARED — 5 minor findings dispositioned: 2 fix-in-v0.2 (contract template + confidence promotion docs); 2 defer to v0.2.x/v0.3 (top-3-areas + refused-section enumeration); 1 defer + known limitation (line-drift)
 
 Full deliverable at [`research/Q8a-minor-findings-disposition.md`](research/Q8a-minor-findings-disposition.md). User confirmed all 5 verdicts as proposed. **Fix in v0.2**: (1) contract template type vocab mismatch — already in Chunk 5; (3) uniform 0.4 confidence + promotion UX — adds ~30 LOC subsection to Chunk 4. **Defer to v0.2.x or v0.3**: (2) top-3-areas double-count and (4) refused-section enumeration covers 7 of 12 rules — both cosmetic. **Defer to v0.3 + document as known limitation**: (5) line-drift in items frontmatter — structural fix needs PostToolUse hook to recheck on edits, depends on v0.2 hook architecture being proven first; v0.2 launch materials document as known limitation. **Net Q5c chunk plan change**: Chunk 4 grows from ~50 to ~80 LOC; other chunks unchanged. Q7 re-dogfood validation should include a smoke check that items captured at runtime have correct file:line (line-drift watch). **Q5 + Q8 user gates both cleared**; Q6 implementation can begin.
