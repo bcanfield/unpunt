@@ -403,7 +403,7 @@ Lessons from the May 2026 sloppiness:
 
 | Session | Date | Owner | Status | Outcome |
 |---|---|---|---|---|
-| *(empty — no sessions run yet)* | | | | |
+| Q1a — Hook events catalog | 2026-05-02 | agent:claude-code-guide + Skill plugin-dev:hook-development + claude (synthesis) | ✓ completed | [v2-plan §Q1a](v2-plan.md#q1a--2026-05-02--claude-code-emits-18-hook-events-with-two-type-modes-command-and-prompt-and-two-config-formats-plugin-hooksjson-vs-settingsjson-direct) · full catalog: [research/Q1a-hook-events-catalog.md](research/Q1a-hook-events-catalog.md) |
 
 ---
 
