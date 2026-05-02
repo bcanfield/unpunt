@@ -26,5 +26,41 @@
       "Bash(wget *)",
       "Bash(nc *)"
     ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/skills/un-punt/hooks/session-start.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/skills/un-punt/hooks/post-tool-use.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/skills/un-punt/hooks/user-prompt-submit.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
   }
 }
