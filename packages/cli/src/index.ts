@@ -4,6 +4,7 @@ import chalk from "chalk";
 import { install } from "./install.js";
 import { status } from "./status.js";
 import { uninstall } from "./uninstall.js";
+import pkg from "../package.json" with { type: "json" };
 
 const cli = cac("un-punt");
 
@@ -43,5 +44,5 @@ cli
   });
 
 cli.help();
-cli.version("0.1.0");
+cli.version(pkg.version);
 cli.parse();

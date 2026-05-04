@@ -77,7 +77,7 @@ You never typed `/un-punt`. Items, sweeps, and lifecycle live as markdown in `.u
 ### Claude Code
 
 ```bash
-/plugin marketplace add <org>/un-punt    # one-time
+/plugin marketplace add bcanfield/un-punt    # one-time
 /plugin install un-punt@un-punt
 ```
 
@@ -97,7 +97,7 @@ Coming in v0.2.x patches. Both platforms shipped stable hook systems in 2026 (Cu
 ### Manual install (no marketplace required)
 
 ```bash
-git clone https://github.com/<org>/un-punt.git
+git clone https://github.com/bcanfield/un-punt.git
 cd un-punt && pnpm install && ./core/build.sh
 
 # install into your local Claude Code (run this from inside the repo

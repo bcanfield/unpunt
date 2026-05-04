@@ -274,7 +274,7 @@ The v0.2 dogfood evidence is the canonical record at [`v0.2-dogfood-report.md`](
   - [x] Reverse the `permissions.deny` additions in `~/.claude/settings.json`. *(All three buckets — allow + ask + deny — reversed precisely via the install manifest; user's pre-existing entries preserved.)*
   - [x] **Leave `<cwd>/.un-punt/` intact** (user data; not ours to delete).
   - [x] Print confirmation.
-- [ ] Publish to npm as `un-punt` (or scoped `@un-punt/cli` if root name is taken). *(Deferred to Phase 1 launch. Local install works via `./packages/cli/run.sh install claude-code`.)*
+- [ ] Publish to npm as `un-punt`. *(Bare name reserved + v0.2.0 publish prep at v0.2 launch. Local install works via `./packages/cli/run.sh install claude-code`.)*
 - [x] Smoke test: install → verify install → use → status → uninstall. *(Smoke-tested locally with fake HOME/cwd; idempotent re-install verified; pre-existing user settings preserved through install + uninstall cycle. npm-publish smoke is the deferred bit.)*
 - [x] **Marketplace setup**: write `.claude-plugin/marketplace.json` at repo root declaring marketplace `un-punt` with one plugin `un-punt` pointing at `adapters/claude-code/`. *(Done in commit `7b46bd0`. End-to-end `/plugin marketplace add <org>/un-punt` → `/plugin install un-punt@un-punt` test deferred to Phase 1 launch — needs the repo to be on github first.)*
 

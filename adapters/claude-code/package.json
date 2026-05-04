@@ -1,0 +1,38 @@
+{
+  "name": "un-punt-adapter-claude-code",
+  "version": "0.2.0",
+  "description": "Claude Code adapter assets for un-punt — skill body, hooks, settings, contract template. Consumed by the un-punt CLI; not intended for direct use.",
+  "type": "module",
+  "files": [
+    "skills",
+    "snippets",
+    "settings.json",
+    ".claude-plugin",
+    "AGENTS.md.template"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "author": "Brandin Canfield <brandincanfield@gmail.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/bcanfield/un-punt#readme",
+  "bugs": {
+    "url": "https://github.com/bcanfield/un-punt/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bcanfield/un-punt.git",
+    "directory": "adapters/claude-code"
+  },
+  "keywords": [
+    "claude-code",
+    "claude",
+    "anthropic",
+    "un-punt",
+    "skill",
+    "adapter"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

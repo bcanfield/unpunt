@@ -15,9 +15,11 @@ Per-package wrappers (build-on-stale + run):
 
 ## Layout
 - `core/` — skill source (`SKILL.body.md`, `reference/`, `snippets/`) + `golden-set/` scenarios + `build.sh`
-- `adapters/claude-code/` — built skill artifact + plugin manifest + settings
-- `packages/cli/` — `@un-punt/cli` (thin installer)
-- `packages/evals/` — `@un-punt/evals` (Claude Agent SDK harness)
+- `adapters/claude-code/` — `un-punt-adapter-claude-code` workspace package; built skill artifact + plugin manifest + settings (published to npm)
+- `packages/cli/` — `un-punt` workspace package (thin installer; published to npm; depends on the adapter via `workspace:^`)
+- `packages/evals/` — `@un-punt/evals` workspace package (Claude Agent SDK harness; private)
+
+`pnpm-workspace.yaml` globs `packages/*` and `adapters/*`. CLI resolves the adapter at runtime via `createRequire(import.meta.url).resolve("un-punt-adapter-claude-code/package.json")` — same code path in dev (workspace symlink) and published (npm dep). See decision #22.
 
 ## Conventions
 ESM only. No tooling beyond Stack. Commit built `SKILL.md`; CI runs `pnpm build && git diff --exit-code`. Shared workspace devDeps go in `pnpm-workspace.yaml` `catalog:`, referenced as `"name": "catalog:"` from each package.

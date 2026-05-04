@@ -1,15 +1,19 @@
 import { existsSync } from "node:fs";
+import { createRequire } from "node:module";
 import { homedir } from "node:os";
 import { dirname, resolve } from "node:path";
 
-// Resolve un-punt repo root from this file's location.
-// Dev: packages/cli/dist/util.js → ../../.. = repo root.
-// (npm-published behavior is a Phase 1 launch concern — see docs/11-checklist.md
-// Phase 1 Day 6 "Publish to npm".)
-export const REPO_ROOT = resolve(new URL("../../..", import.meta.url).pathname);
-
-export const ADAPTER_ROOT = resolve(REPO_ROOT, "adapters/claude-code");
-export const CORE_REFERENCE_ROOT = resolve(REPO_ROOT, "core/skill/reference");
+// Adapter assets ship as a sibling npm package (un-punt-adapter-claude-code).
+// In dev, pnpm symlinks node_modules/un-punt-adapter-claude-code →
+// adapters/claude-code/. In published mode, npm pulls the package as a
+// regular dependency. Same code path in both modes — see decision #22.
+const require = createRequire(import.meta.url);
+export const ADAPTER_ROOT = dirname(
+  require.resolve("un-punt-adapter-claude-code/package.json"),
+);
+// core/build.sh rsyncs core/skill/reference/ into the adapter tree, so the
+// reference contents are reachable from the adapter root.
+export const CORE_REFERENCE_ROOT = resolve(ADAPTER_ROOT, "skills/un-punt/reference");
 
 const HOME = homedir();
 export const CLAUDE_HOME = resolve(HOME, ".claude");

@@ -1,19 +1,14 @@
 {
-  "name": "@un-punt/cli",
-  "version": "0.0.0",
-  "private": true,
+  "name": "un-punt",
+  "version": "0.2.0",
+  "description": "Capture deferrals (TODOs, `as any`, skipped tests, swallowed exceptions) during agent coding work; finish them on a verified cleanup pass at natural stopping points.",
   "type": "module",
   "bin": {
     "un-punt": "./dist/index.js"
   },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
-  },
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "scripts": {
     "build": "tsup",
@@ -22,6 +17,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "un-punt-adapter-claude-code": "workspace:^",
     "cac": "catalog:",
     "chalk": "catalog:"
   },
@@ -30,5 +26,35 @@
     "tsup": "catalog:",
     "tsx": "catalog:",
     "vitest": "catalog:"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "author": "Brandin Canfield <brandincanfield@gmail.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/bcanfield/un-punt#readme",
+  "bugs": {
+    "url": "https://github.com/bcanfield/un-punt/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bcanfield/un-punt.git",
+    "directory": "packages/cli"
+  },
+  "keywords": [
+    "claude-code",
+    "claude",
+    "anthropic",
+    "agent",
+    "coding-agent",
+    "tech-debt",
+    "todo",
+    "cleanup",
+    "skill",
+    "plugin",
+    "cli"
+  ],
+  "publishConfig": {
+    "access": "public"
   }
 }

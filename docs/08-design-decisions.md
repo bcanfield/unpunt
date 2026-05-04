@@ -278,7 +278,9 @@ Marketing can still use debt-related language for the eng-leader narrative ("the
 
 ## 16. Hybrid workspace layout — `packages/` for TS workspaces, repo root for spec trees
 
-**Chose**: Pnpm workspace packages (`@un-punt/cli`, `@un-punt/evals`) live under `packages/`. Spec-driven trees (`core/`, `adapters/claude-code/`) live at the repo root. Both `pnpm-workspace.yaml` and `docs/11-checklist.md` Phase −1 reflect this.
+**Chose**: Pnpm workspace packages live under `packages/` — `un-punt` (CLI; unscoped, published to npm at v0.2.0) and `@un-punt/evals` (private). Spec-driven trees (`core/`) live at the repo root. The CLI was originally `@un-punt/cli` internally; renamed to bare `un-punt` at v0.2.0 publish prep so the install command reads `npx un-punt install claude-code` rather than `npx @un-punt/cli install claude-code`.
+
+**Note (May 2026 v0.2.0 publish prep)**: this decision originally said `adapters/claude-code/` lives at the repo root and is *not* a workspace package. That holds for the path (it stays at the repo root, not nested under `packages/`) but **adapters are now also workspace packages** — see Decision #22 for the rationale. `pnpm-workspace.yaml` lists both `packages/*` and `adapters/*`. `core/` remains excluded — it's pure source.
 
 **Alternatives**:
 - *Strict per-original-checklist*: `core/`, `adapters/`, `evals/harness/`, `cli/` all at repo root, no `packages/` dir.
@@ -427,6 +429,34 @@ Reconsider if:
 - **Refuse > Flag > Fix**: never reconsider. The bias is the product.
 - **Plugin over MCP**: Phase 4 team aggregation needs a remote ingest endpoint → an MCP server (or plain HTTP) becomes appropriate then.
 - **No daemon**: if Anthropic ships a stable always-on subagent runtime (cf. KAIROS-style background daemons [^kairos]) and users want passive cross-session audit, a thin background sub-agent becomes considerable. Today, opt-in only.
+
+---
+
+## 22. Adapter as pnpm workspace asset package — `un-punt-adapter-claude-code`
+
+**Chose**: at v0.2.0 publish prep, `adapters/claude-code/` was added to `pnpm-workspace.yaml` and given its own `package.json` declaring `un-punt-adapter-claude-code` (unscoped, public). The `un-punt` CLI declares it as a runtime dependency (`"un-punt-adapter-claude-code": "workspace:^"`). At install time, the CLI resolves the adapter root via `createRequire(import.meta.url).resolve("un-punt-adapter-claude-code/package.json")`. Two packages now publish to npm in lockstep at v0.2.0.
+
+**Alternatives**:
+- *Build-time copy*: `pnpm build` runs `cp -R adapters/claude-code packages/cli/adapter`; CLI reads from its own `adapter/` subdir. The hack the user pushed back on.
+- *Bundle assets inline as JS strings*: a build step turns markdown/JSON files into TS module exports; tsup bundles everything into a single `dist/index.js`. At install, write strings back to disk.
+- *Ship CLI alone, fetch adapter at install time*: `npx un-punt install` clones from GitHub. Network-dependent.
+- *Single repo-root npm package* (the `core/` and `adapters/` content shipped under the CLI's `files`): adapter content gets shipped under a CLI-controlled path, no second package, but couples adapter versioning to CLI versioning forever.
+
+**Why**:
+- **Declared dependency, not buried in build script.** The CLI's `package.json` says exactly what it needs: `un-punt-adapter-claude-code`. Future maintainers see the dependency graph at a glance.
+- **Same code path in dev and published mode.** pnpm symlinks `node_modules/un-punt-adapter-claude-code` → `adapters/claude-code/` in dev; npm pulls the published tarball in production. `createRequire` resolves either transparently. No `if (NODE_ENV)` branches, no path-walking heuristics.
+- **Scales for cross-platform adapters.** Cursor, Codex, Gemini CLI adapters become `un-punt-adapter-cursor`, `un-punt-adapter-codex`, etc. — symmetric, each version-locked independently if needed (e.g., a Cursor 2.5 breaking change can land in `un-punt-adapter-cursor@0.3.0` without forcing a CLI bump).
+- **No `.gitignore` exception** for a build-output directory mirroring source content.
+- **`workspace:^` rewriting** is a stable, well-understood pnpm primitive — at publish time it becomes `^0.2.0` in the published `package.json`.
+
+**Tradeoff**:
+- **Two packages publish in lockstep.** `pnpm -r publish --access public` does both, but it's still two registry entries to monitor for security advisories, abandonment, etc. Acceptable given it's our own org-equivalent (both unscoped, single owner).
+- **Decision #16 partially superseded.** That decision argued `adapters/` should *not* be a workspace package because it's spec content. The argument held while adapters were source-only files copied by `core/build.sh`. Once we needed to ship adapter content as a runtime npm dependency, "it's a workspace asset package" became the cleaner framing. `core/` is still excluded — it's pure source that builds *into* adapter packages. The `packages/*` + `adapters/*` glob in `pnpm-workspace.yaml` keeps the visual distinction (TS workspaces vs. asset workspaces).
+- **Adapter package versions need to track CLI versions.** v0.2.0 ships both at 0.2.0; future bumps require both. `pnpm -r publish` makes this mechanical, but discipline is needed (don't bump one without the other unless the breaking change is genuinely scoped to one).
+
+**Reconsider**:
+- If the adapter content stops changing across CLI releases → could freeze adapter at a permanent 0.x and only bump CLI.
+- If a future Anthropic-mandated install-format change makes Claude Code adapter assets unshippable as flat files (e.g., must be served from a specific CDN) → re-evaluate.
 
 ---
 
