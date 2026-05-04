@@ -323,7 +323,7 @@ Quality gates for implementation sessions add:
 
 #### Q7b — Probe re-runs in punt-board
 - **Question**: Do probes 1, 4, 6, 7, 8 now pass post-v0.2?
-- **Sources**: punt-board repo at `/Users/bcanfield/Documents/Git/un-punt-dashboards`; dogfood-log.md as the format spec for outcomes
+- **Sources**: punt-board repo at `/Users/bcanfield/Documents/Git/un-punt-dashboards` (subject repo for the v0.2 dogfood); [`v0.2-dogfood-report.md`](v0.2-dogfood-report.md) as the canonical record of all probe outcomes
 - **Deliverable**: dogfood-log entries for Probes 9–14 (re-runs); pass/fail per probe with evidence
 - **Owner**: **user** runs the probes; claude observes + records
 - **Mode**: validation

@@ -214,6 +214,8 @@ Marketing can still use debt-related language for the eng-leader narrative ("the
 
 ## 13. Skill (with auto-invocation), not hooks, for self-capture
 
+> **⚠️ PARTIALLY SUPERSEDED BY DECISION #21 (May 2026).** The May 2026 punt-board dogfood empirically falsified bullets 2 + 3 below: description-match auto-loading does not fire on coding-topic conversations (Probes 1, 2, 7), and hooks are now the cross-platform standard primitive across Cursor, Codex, Copilot, Gemini CLI (Q2 research). Bullets 1 + 4 still hold. See Decision #21 below for the v0.2 hook architecture that replaces "no hooks for self-capture" while preserving the "skill is the IP" framing.
+
 **Chose**: Triggering happens via the skill's `description` field — Claude reads it on every turn and auto-invokes when a deferral signal matches. No `PostToolUse` hook for capture.
 
 **Alternatives**: A `PostToolUse` / `Stop` hook that scans tool output for deferral patterns; a slash command users must remember.

@@ -1,8 +1,12 @@
 # un-punt v0.2 — plan
 
-> **Status: living plan.** Updated as each research session completes. The "Research outcomes" section at the bottom is the canonical record of what each Q-session decided.
+> **Status: v0.2 implementation + validation + fix1 complete (May 2026).** This doc was the strategic plan that drove the work; preserved as historical record. **For the canonical post-mortem record use [`v0.2-dogfood-report.md`](v0.2-dogfood-report.md). For outstanding work use [`v0.2-followups.md`](v0.2-followups.md).**
 >
-> **Source of truth for the v0.1 evidence base:** [`/Users/bcanfield/Documents/Git/un-punt-dashboards/dogfood-log.md`](https://github.com/bcanfield/unpunt) (gitignored locally; will be PR'd to bcanfield/unpunt at end of dogfood). All probe outcomes referenced below are from that log.
+> The "Research outcomes" section at the bottom is the canonical record of what each Q-session decided, with cross-references to the deliverable file in [`research/`](research/).
+>
+> **v0.2 ship state**: 4 of 4 failed v0.1 probes pass. Sketch (ii) compliance 100% on observed events. Decision #21 in design register. AGENTS.md primer ships. CLI v2 manifest format works. `$HOME` regression caught + fixed + regression-checked. README launch update pending per [`v0.2-launch-readme-draft.md`](v0.2-launch-readme-draft.md). Tag `v0.2.0` pending. Cursor + Codex adapters deferred to v0.2.x patches.
+>
+> **Source of truth for the v0.1 + v0.2 evidence base:** [`v0.2-dogfood-report.md`](v0.2-dogfood-report.md). All probe outcomes referenced below cross-link to the consolidated report; the original punt-board working draft (`<un-punt-dashboards>/dogfood-log.md`) is no longer the source of truth.
 
 ---
 
@@ -222,7 +226,7 @@ Same shape as the v0.1 dogfood, executed in punt-board. Specifically:
 2. Uninstall v0.1 (`packages/cli/run.sh uninstall`)
 3. Reinstall v0.2 (`packages/cli/run.sh install claude-code`)
 4. Restart Claude Code
-5. Open a fresh session in `/Users/bcanfield/Documents/Git/un-punt-dashboards`
+5. Open a fresh session in your subject repo (the un-punt repo's own punt-board test harness was at `/Users/bcanfield/Documents/Git/un-punt-dashboards`; substitute your own subject repo for re-validation)
 6. **Probe 9 (re-run of probe 1)**: send the diagnostic question (*"Are you currently operating with the un-punt skill loaded?"*). Confirm activation works.
 7. **Probe 10 (re-run of probe 4)**: build a small task that involves writing a TODO. Watch `.un-punt/items/` for new captures during work.
 8. **Probe 11 (re-run of probe 6/8)**: at natural wrap-up, say *"done"* or *"ready to ship"*. Watch for sweep suggestion.
