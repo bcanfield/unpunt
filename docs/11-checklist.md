@@ -6,6 +6,14 @@ This is the operational version of [`06-build-plan.md`](06-build-plan.md). Read 
 
 > **Conventions:** `[ ]` = not started, `[x]` = done. Indented sub-items are subtasks of the parent. **Checkpoints** in blockquote describe the literal artifact at that moment.
 
+> **⚠️ STATUS (May 2026)** — this checklist was the original Phase 0 → Phase 1 build plan, last meaningfully updated April 2026. The v0.2 dogfood + Decision #21 + v0.2 implementation reshaped how Phase 1 actually completed. **For current operational state, read first**:
+>
+> - [`v0.2-dogfood-report.md`](v0.2-dogfood-report.md) — what the v0.1 + v0.2 dogfood found, fixed, and validated
+> - [`v0.2-followups.md`](v0.2-followups.md) — outstanding pre-launch checkboxes (PL-1 through PL-5) supersede the unchecked Phase 1 boxes below
+> - [`v0.3-roadmap.md`](v0.3-roadmap.md) — V03-1 through V03-10 next-major work
+>
+> Specific updates inline below: Phase 0c remaining corpus → V03-3; Phase 0e A2 spike → empirically subsumed by v0.2 dogfood; Phase 1 Day 5 bypass-mode item → reversed per Decision 14 May 2026; Phase 1 Day 7 B8 → MATERIALIZED + MITIGATED via Decision #21; "Branch: hooks become necessary" → activated as v0.2.
+
 ---
 
 ## Phase −1 — Foundations (~½ day) — **DONE** (commit `dd5013b`)
@@ -122,6 +130,8 @@ The corpus is **error-analysis-first** — built from real misses, not imagined 
 
 > **Checkpoint 0c**: ~73 valid scenarios (30 capture + 25 non-capture + 8 adversarial + 10 planning). Stratification verified by a one-liner that counts types, languages, and categories. *(19 of 73 done; remaining 54 = 30 capture + 25 non-capture - 1 already-existing cap-smoke pending dogfood)*
 
+> **Update (May 2026)**: dogfood happened in v0.1 + v0.2 (see [`v0.2-dogfood-report.md`](v0.2-dogfood-report.md)) and produced 18 real-source-deferral patterns + 9 correctly-skipped non-deferrals + the v0.2.0-fix1 silent-failure case. **Conversion of these to formal `cap-NNN.yaml` / `nocap-NNN.yaml` scenarios is deferred to v0.3 V03-3** ([`v0.3-roadmap.md`](v0.3-roadmap.md)). The remaining 54 capture/non-capture corpus is no longer pending generic dogfood — it's a focused conversion task with the empirical source already gathered.
+
 ---
 
 ## Phase 0d — Eval cycles (~1–2 days) — **PARTIAL** (commits `8255a17` → `345b091`; 19-of-73 spec-driven baseline; v6 locked; full corpus deferred until Phase 0c remaining lands)
@@ -170,17 +180,25 @@ Iteration history (4 substantive skill-body changes during triage):
 
 ---
 
-## Phase 0e — A2 spike: diff quality (~1 day)
+## Phase 0e — A2 spike: diff quality (~1 day) — **EMPIRICALLY SUBSUMED by v0.2 dogfood (May 2026)**
 
-Tests A2 ("agent produces safe diffs ≥80% of the time"); see [`07-risks-and-evals.md`](07-risks-and-evals.md) §A2 and [`06-build-plan.md`](06-build-plan.md) Phase 0e. Manual scoring.
+> Tests A2 ("agent produces safe diffs ≥80% of the time"); see [`07-risks-and-evals.md`](07-risks-and-evals.md) §A2 and [`06-build-plan.md`](06-build-plan.md) Phase 0e. Manual scoring.
 
-- [ ] Pick 3 personal repos with real captured items (use the same dogfood repos from 0c plus a third).
-- [ ] Trigger sweep on 30 items total (10 per repo).
-- [ ] Manually score each diff: `clean | acceptable | scope-creep | wrong | broke-untested`.
-- [ ] Aggregate. Pass = observed ≥75% clean+acceptable AND observed ≤5% wrong-or-broke AND **Wilson 95% upper bound on wrong-or-broke ≤10%** (revised April 2026 per [`07-risks-and-evals.md`](07-risks-and-evals.md) §A2). If the Wilson upper-bound check fails, expand to 60 items × 3 repos = 180 before Phase 1.
-- [ ] If FAIL: tune verification rules or refusal thresholds in skill body before Phase 1.
+**Update (May 2026)**: the formal 30-items × 3-repos manual-scoring spike never ran as planned. The v0.1 + v0.2 dogfood empirically produced equivalent (and richer) signal:
 
-> **Checkpoint 0e**: Both A1' and A2 pass. Skill is calibrated. Phase 1 unblocked.
+- **Probe 5 (v0.1)**: cold-start sweep produced spec-correct `plan.md` + `report.md` with 0 fix-eligible items at N=18 cold-start corpus — disposition prompt correctly skipped at N=0 per spec
+- **Probe 10 (v0.2)**: real-time capture during work landed at confidence 0.95 with bonus reasoning about an untyped parameter — quality lift over what cold-start regex could produce
+- **Probe 12 (v0.2)**: cold-start regression-free at 19/19 captures, 0 false positives, 9 correctly-discriminated non-deferrals — pre-flight protected-branch check fired correctly + agent surfaced specific promotion candidates by ID
+- **Sketch (ii) compliance**: 100% on observed events (small N; expanding through real-world adoption)
+
+The v0.2 dogfood evidence is the canonical record at [`v0.2-dogfood-report.md`](v0.2-dogfood-report.md). The Wilson-upper-bound-style discipline is preserved in `docs/v0.3-roadmap.md` V03-3 (golden-set conversion) where applicable.
+
+- [x] ~~Pick 3 personal repos with real captured items~~ → punt-board served as the single subject; covered both v0.1 and v0.2 arcs
+- [x] ~~Trigger sweep on 30 items total~~ → cold-start sweep ran with 18 (v0.1) and 19 (v0.2 post-codebase-drift) items; disposition prompt + planning behavior validated
+- [x] ~~Manually score each diff~~ → no fix-eligible items in either sweep (all at confidence 0.4); diff-quality validation came via Probe 10 single capture (correct + bonus signal)
+- [ ] Wilson upper-bound check at scale → deferred to v0.3 V03-3 + multi-day adoption period
+
+> **Checkpoint 0e (revised)**: A1' confirmed by v0.2 dogfood probes 9–12; A2 partially confirmed (n=1 fix-eligible capture observed; needs scale). Phase 1 unblocked retroactively via v0.2 ship.
 
 ---
 
@@ -231,7 +249,7 @@ Tests A2 ("agent produces safe diffs ≥80% of the time"); see [`07-risks-and-ev
 
 - [ ] Implement verifier-script denylist in skill body §4 (refuse `package.json` scripts containing `curl`/`wget`/`fetch`/`nc`, shell metachars beyond `&&`/`;`/`||`, dynamically-loaded files, `exit 0` no-ops on non-empty repos).
 - [ ] Implement watch-mode detection (substrings: `--watch`, `vitest dev`, `jest --watch`, `tsc --watch`).
-- [ ] Implement skill-level bypass-mode detection: skill checks `CLAUDE_DANGEROUSLY_SKIP_PERMISSIONS` env var + permission-state probe at session start; refuses to operate if set. Test with that env var set and confirm refusal message.
+- [x] ~~Implement skill-level bypass-mode detection: skill refuses to operate if bypass set~~ → **REVERSED per Decision 14 May 2026 revision.** Skill operates normally in `--dangerously-skip-permissions` mode. v0.2.0 immediate corrections empirically confirmed hooks fire normally in bypass mode (per current Claude Code docs at https://code.claude.com/docs/en/hooks-guide.md). Earlier-cited GH issues #39523/#18846/#41615 don't actually document hooks-disabled-in-bypass — that citation was wrong. What IS reduced in bypass: `permissions.deny` enforcement on categorical-refusal paths. v0.3 V03-10 plans a `PreToolUse` refusal-floor hook that fires *before* permission-mode check for stronger bypass-mode safety.
 - [ ] Implement symlink-via-Bash containment for `.un-punt/items/*`: skill drives filesystem ops via `lstat` + `realpath` checked against the repo root, not via Edit/Write tools, on any path under `.un-punt/items/`.
 - [ ] Implement hardened 24h-human-touch check using `%cE` (committer email, not `%aE`) + GPG signature verification on high-risk paths + `--date` rewriting check.
 
@@ -260,14 +278,22 @@ Tests A2 ("agent produces safe diffs ≥80% of the time"); see [`07-risks-and-ev
 - [x] Smoke test: install → verify install → use → status → uninstall. *(Smoke-tested locally with fake HOME/cwd; idempotent re-install verified; pre-existing user settings preserved through install + uninstall cycle. npm-publish smoke is the deferred bit.)*
 - [x] **Marketplace setup**: write `.claude-plugin/marketplace.json` at repo root declaring marketplace `un-punt` with one plugin `un-punt` pointing at `adapters/claude-code/`. *(Done in commit `7b46bd0`. End-to-end `/plugin marketplace add <org>/un-punt` → `/plugin install un-punt@un-punt` test deferred to Phase 1 launch — needs the repo to be on github first.)*
 
-## Phase 1, Day 7 — B8 verification (NEW April 2026)
+## Phase 1, Day 7 — B8 verification — **MATERIALIZED + MITIGATED via Decision #21 (May 2026)**
 
-Per [`07-risks-and-evals.md`](07-risks-and-evals.md) B8 (now elevated, weight 30%): description-match auto-loading + auto-compaction survival are tested empirically before launch.
+Per [`07-risks-and-evals.md`](07-risks-and-evals.md) B8 (now elevated, weight 30%): description-match auto-loading + auto-compaction survival.
 
-- [ ] Confirm skill description + `when_to_use` combined ≤ 1,536 chars (`SLASH_COMMAND_TOOL_CHAR_BUDGET`).
-- [ ] Run **N=5 fresh repos × M=3 distinct session shapes (greenfield / mid-feature / post-merge) = 15 trials**. Each trial: install on fresh repo, perform a session of the prescribed shape with a real deferral, observe whether the skill auto-invokes and writes an item without `/un-punt` invocation.
-- [ ] At least one of the 15 trials must include a forced-compaction event (long session driving auto-compaction). Verify the skill body survives or is correctly re-attached.
-- [ ] **Pass: ≥ 12 / 15 unprompted captures.** If <12, switch to plugin form + `SessionStart` hook (the "hooks become necessary" branch).
+**Update (May 2026)**: the formal N=5 × M=3 = 15-trial verification was effectively replaced by the v0.1 dogfood, which produced sharper evidence than 15 trials would have:
+
+- **Probes 1, 2, 7 (v0.1)**: description-match auto-load FAILED on 3 distinct session shapes (existing session pre-dating install / Claude Code restart / fresh session). Probe failure rate effectively **0/3 = 0%** unprompted captures on coding-topic conversations — well below the ≥12/15 pass threshold.
+- **Mitigation**: the "hooks become necessary" branch (described below) was activated as v0.2 per Decision #21. SessionStart + PostToolUse + UserPromptSubmit hooks ship in v0.2.
+- **Re-validation (v0.2)**: Probes 9, 10, 11, 12 all pass under the v0.2 hook architecture. Real-world Sketch (ii) compliance: 100% on observed events. Full record at [`v0.2-dogfood-report.md`](v0.2-dogfood-report.md).
+
+- [x] ~~Confirm skill description + `when_to_use` combined ≤ 1,536 chars~~ — confirmed; not the cause of the auto-load failure
+- [x] ~~Run N=5 × M=3 = 15 trials~~ — replaced by v0.1 dogfood probes 1/2/7 + v0.2 re-dogfood probes 9–12
+- [x] ~~At least one trial must include a forced-compaction event~~ — empirically observed across multi-day v0.2 dogfood
+- [x] **PASS criterion ≥ 12/15 unprompted captures** → FAILED in v0.1 → "hooks become necessary" branch activated as v0.2 → re-validated PASS
+
+> **Checkpoint Day 7 (revised)**: B8 was the load-bearing risk that materialized; Decision #21 hooks mitigated; v0.2 re-dogfood confirmed. Phase 1 launch readiness now tracked at `v0.2-followups.md` PL-1 through PL-5.
 
 ## Phase 1, Day 8 — Polish + landing page + demo GIF
 
@@ -315,17 +341,19 @@ Per [`07-risks-and-evals.md`](07-risks-and-evals.md) B8 (now elevated, weight 30
 
 ---
 
-## Branch: hooks become necessary
+## Branch: hooks become necessary — **ACTIVATED as v0.2 (May 2026)**
 
-Phase 0d may reveal that description-match alone misses too much. If so, ~5 items get inserted before Phase 1 Day 2:
+> Phase 0d may reveal that description-match alone misses too much. If so, ~5 items get inserted before Phase 1 Day 2.
 
-- [ ] Implement `core/hooks/on-session-start.sh` (counts via `rg`; emits `additionalContext`).
-- [ ] Implement `core/hooks/on-stop.sh` (wrap-up signal pattern match; emits reminder).
-- [ ] Write `adapters/claude-code/hooks/hooks.json` per [`09-adapters.md`](09-adapters.md) §4.3.
-- [ ] Add `"hooks": "hooks/hooks.json"` to plugin manifest (which means we also need to switch to plugin form — `/un-punt` becomes `/un-punt:un-punt`; update all docs).
-- [ ] Re-run eval to confirm hooks restore recall.
+**Status**: this branch was activated. v0.1 dogfood Probes 1, 2, 7 falsified the description-match assumption empirically. v0.2 ships the full hook architecture per [Decision #21](08-design-decisions.md):
 
-This branch adds ~½ day to Phase 1 and changes the slash command. Decide based on the eval, not pre-emptively.
+- [x] **Implement `core/hooks/session-start.sh`** — loads skill activation reminder unconditionally on session start
+- [x] **Implement `core/hooks/post-tool-use.sh`** — fires after Edit/Write/MultiEdit; structural pre-filter (path + gitignore); injects capture reminder. **Note**: original sketch said *"counts via `rg`"* (regex pre-classification); rejected as Sketch (iii) anti-pattern per Q4a. v0.2 ships Sketch (ii) instead — no regex over file content.
+- [x] **Implement `core/hooks/user-prompt-submit.sh`** — fires on every user prompt (no regex pre-filter as of v0.2.0 immediate corrections — original draft had a phrase regex which proved too narrow; agent now judges via skill body). Replaces the original `on-stop.sh` plan.
+- [x] **Write hooks block in `adapters/claude-code/settings.json`** — register all 3 hooks. Skill-direct install (no marketplace plugin conversion) so `/un-punt` slash command stays un-namespaced. CLI v2 manifest tracks hook entries for clean uninstall (per Q1c install-paths research; not the original plan's `/un-punt:un-punt` namespacing).
+- [x] **Re-validated via v0.2 re-dogfood** (Probes 9–12) — all 4 failed v0.1 probes pass under v0.2.
+
+This branch added ~6 implementation chunks (Q6.1–Q6.6) + 1 fix1 patch ($HOME path-expansion) + 3 v0.2.0 immediate corrections (regex drop, bypass-mode docs, AGENTS.md auto-write drop). Slash command stayed `/un-punt`. Full implementation history in [`v0.2-plan.md`](v0.2-plan.md) Q6 series + [`v0.2-dogfood-report.md`](v0.2-dogfood-report.md).
 
 ---
 
