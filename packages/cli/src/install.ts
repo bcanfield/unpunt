@@ -1,4 +1,5 @@
 import { cp, readFile } from "node:fs/promises";
+import { homedir } from "node:os";
 import { resolve } from "node:path";
 import chalk from "chalk";
 import {
@@ -16,6 +17,18 @@ import {
   type InstallManifest,
   writeJsonAtomic,
 } from "./util.js";
+
+// Adapter source uses $HOME for portability across machines, but Claude Code's
+// hook executor does not reliably shell-expand environment variables in command
+// strings (May 2026 punt-board v0.2 dogfood: hooks installed correctly via $HOME
+// but failed to fire because the path stayed literal at exec time).
+//
+// Substitute $HOME with the user's actual home directory at install time so the
+// command in user settings.json is a literal absolute path. Documented hook
+// examples in plugin-dev:hook-development always use literal absolute paths.
+function expandHomePlaceholders(cmd: string): string {
+  return cmd.replace(/\$HOME\b/g, homedir());
+}
 
 const SUPPORTED_PLATFORMS = ["claude-code"] as const;
 type Platform = (typeof SUPPORTED_PLATFORMS)[number];
@@ -117,13 +130,30 @@ export async function install(rawPlatform: string): Promise<void> {
   // (no auto-discovery for skill-direct, unlike marketplace plugins).
   // Sketch (ii) compliance: we only ROUTE which scripts run on which events;
   // the scripts themselves emit additionalContext for the agent to act on.
+  //
+  // $HOME expansion: adapter source files use $HOME for cross-machine
+  // portability; we substitute the user's actual home directory here at install
+  // time because Claude Code's hook executor doesn't shell-expand env vars
+  // reliably (see expandHomePlaceholders helper above).
   const ourHooks: { [eventName: string]: string[] } = {
     ...(priorManifest?.added_hooks ?? {}),
   };
   let totalHooksAdded = 0;
   if (adapterSettings.hooks) {
     userSettings.hooks ??= {};
-    for (const [eventName, adapterEntries] of Object.entries(adapterSettings.hooks)) {
+    // Pre-expand all adapter command strings so the merged entries written to
+    // user settings.json contain absolute paths, and the manifest tracks the
+    // same absolute paths (so uninstall matches correctly).
+    const expandedAdapterHooks: { [eventName: string]: HookMatcherEntry[] } = {};
+    for (const [eventName, entries] of Object.entries(adapterSettings.hooks)) {
+      expandedAdapterHooks[eventName] = entries.map((entry) => ({
+        ...entry,
+        hooks: (entry.hooks ?? []).map((h) =>
+          h.command ? { ...h, command: expandHomePlaceholders(h.command) } : h,
+        ),
+      }));
+    }
+    for (const [eventName, adapterEntries] of Object.entries(expandedAdapterHooks)) {
       userSettings.hooks[eventName] ??= [];
       ourHooks[eventName] ??= [];
       const existingCommands = new Set<string>();
