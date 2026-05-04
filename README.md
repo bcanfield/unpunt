@@ -2,7 +2,7 @@
 
 **Finish what your agent punted.**
 
-A skill that records every deferral your AI coding agent makes (TODOs, skipped tests, loosened types, "I'll handle this later") as a typed item in `.un-punt/`, then closes them at natural stopping points with verified diffs and receipts you can audit. Stateful. Cross-session. Disposition-gated.
+A markdown skill plus three lightweight hooks that record every deferral your AI coding agent makes (TODOs, skipped tests, loosened types, "I'll handle this later") as a typed item in `.un-punt/`, then close them at natural stopping points with verified diffs and receipts you can audit. The skill is the IP — the rules. Hooks fire at deterministic events to load the skill reliably and nudge the agent at the right moments. **The agent stays the engine; hooks are routing, not classifiers.** Stateful. Cross-session. Disposition-gated.
 
 Not a style cleaner (Anthropic's `code-simplifier` does that, statelessly). Not a PR-review bot (CodeRabbit / Greptile do that, post-diff). un-punt is the cross-session record of what your agent deliberately punted on, finished before it ships.
 
@@ -62,6 +62,7 @@ You never typed `/un-punt`. Items, sweeps, and lifecycle live as markdown in `.u
 - **Visible cleanup in your tree.** Disposition prompt before anything lands on your branch.
 - **Plain text in your repo.** `cat .un-punt/items/<id>.md` shows any deferral's history.
 - **Inventories existing debt on first install.** A one-time scan captures TODOs, `.skip` markers, and `as any` already in your repo, at lower confidence. You're not starting from zero.
+- **Hooks fire at session start, after every Edit/Write, and on user prompts** so the skill body's rules reach the agent reliably — without classifying content. The skill body is still where the rules live; hooks just route the events. Per [Decision #21](docs/08-design-decisions.md), hooks are now the cross-platform standard primitive across Claude Code, Cursor, Codex, Gemini CLI.
 
 ### You don't have to
 
@@ -80,11 +81,17 @@ You never typed `/un-punt`. Items, sweeps, and lifecycle live as markdown in `.u
 /plugin install un-punt@un-punt
 ```
 
-Once installed, the skill is available to your agent. The agent offers a cleanup pass at natural stopping points if it caught anything.
+After install + Claude Code restart:
+- The skill loads at session start (a SessionStart hook activates it reliably)
+- Three hooks (`SessionStart`, `PostToolUse`, `UserPromptSubmit`) merge into your `~/.claude/settings.json`
+- An `AGENTS.md` primer drops into the current repo (skipped if you already have one)
+- The skill is available to the agent — no `/un-punt` command needed for capture
+
+The hooks are stateless bash scripts that emit context reminders for the agent. They don't classify content; the agent does. [Decision #21](docs/08-design-decisions.md) documents the architecture and why.
 
 ### Codex / Cursor
 
-Coming in phase 2. Codex ships at parity (same skill body, different frontmatter and install path). Cursor is experimental; its `.cursor/rules` system limits some triggers compared to Claude Code. See [`09-adapters.md`](docs/09-adapters.md).
+Coming in v0.2.x patches. Both platforms shipped stable hook systems in 2026 (Cursor 1.7 in Sept 2025, Codex 0.124.0 in April 2026), and both adopted the same `SKILL.md` open standard as Claude Code. The same skill body and same hook scripts port to both — only the registration files differ. Per Q2 cross-platform research, future-lift to either is ~80 LOC + a single afternoon. See [`docs/research/Q2a-codex-analogues.md`](docs/research/Q2a-codex-analogues.md) and [`Q2b-cursor-analogues.md`](docs/research/Q2b-cursor-analogues.md). For platforms without hook systems (Aider), an `AGENTS.md` primer ships as the universal floor.
 
 ### Manual install (no marketplace required)
 
@@ -103,6 +110,8 @@ cd ~/path/to/your/repo
 ```
 
 The `install` command merges un-punt's `permissions.{allow,ask,deny}` into your `~/.claude/settings.json`, copies the skill into `~/.claude/skills/un-punt/`, and drops a contract template into `<cwd>/.un-punt/contract.md`. Re-running `install` is idempotent.
+
+v0.2 also merges a `hooks` block into `~/.claude/settings.json` (tracked in the install manifest for clean uninstall) and copies an `AGENTS.md` primer into the current repo (skipped if one already exists).
 
 ### Verify
 
@@ -123,7 +132,26 @@ un-punt status   # open / planned / resolved counts
 
 The agent does the work, guided by a skill that teaches it what to capture and when. Your agent uses its existing tools (Edit, Write, Bash) to write items, plan sweeps, run verification, and commit fixes.
 
+v0.2 also installs three lightweight hooks (`SessionStart`, `PostToolUse`, `UserPromptSubmit`) that route deterministic events to the skill body. The hooks are pure structural pre-filter — they don't classify file content; the agent does (preserving the "agent is the engine" architecture). See [`08-design-decisions.md`](docs/08-design-decisions.md) Decision #21 for the architecture.
+
 Full architecture in [`03-architecture.md`](docs/03-architecture.md).
+
+---
+
+## We built it. We dogfooded it. We found the foundation issue. We fixed it.
+
+un-punt v0.1 shipped with a working skill body, comprehensive refusal lists, and a clean cold-start inventory. Then we used it on a real product build for two weeks. The skill was empirically dormant: it never auto-loaded on coding-topic conversations, never fired silent capture during normal Edit/Write tool calls, and never surfaced a wrap-up suggestion at textbook trigger phrases. Cold-start (`/un-punt` slash-command) recovered everything once invoked, but the "always-on" promise was empirically false on real work.
+
+We documented this honestly in [`docs/research/Q3c-decision-13-reread.md`](docs/research/Q3c-decision-13-reread.md). The original architecture decision (Decision 13: "skill not hooks for self-capture") rested on two empirical assumptions that turned out wrong:
+
+1. **"Auto-invocation works when the description is well-written"** — empirically false. A well-formed ~1,100-character description well within Claude Code's 1,536-character budget did not fire description-match auto-loading on a "build a webapp" conversation topic. Three separate dogfood probes confirmed.
+2. **"Cross-platform — hooks are Claude-Code-specific"** — empirically inverted. Between September 2025 and April 2026, Cursor, Codex, Copilot, and Gemini CLI all shipped stable hook systems with Claude-Code-compatible JSON-stdin/stdout contracts. Hooks are now the cross-platform standard primitive, not a Claude-Code lock-in.
+
+v0.2 ships **Decision #21**: the Phase 2 hook contingency the build plan documented as a fallback (*"Add SessionStart / Stop hooks in Phase 2 only if eval shows description-match alone is unreliable"*) is now the default. Three hooks fire at deterministic events; they emit context reminders to the agent; the agent applies the skill body's rules. The hooks do **no content classification** — that stayed with the agent (Decision 2 preserved). The "skill is the IP" framing is unchanged: hooks are routing scripts, not the brain.
+
+We re-dogfooded with the v0.2 architecture and the four failed probes pass. Captures during real-time work now land at confidence ~0.95 (vs cold-start's 0.4 floor), and the agent caught long-tail signals (untyped function parameters, mock implementations, hardcoded values) that the old regex-based cold-start could not. A `$HOME` path-expansion bug surfaced 2 days after ship across a session boundary; we diagnosed in 30 minutes, fixed in 5 LOC, added a regression check, and re-validated. The full re-dogfood record lives at [`docs/v0.2-dogfood-report.md`](docs/v0.2-dogfood-report.md).
+
+The arc here matters because un-punt is not a feature you trust on faith. It's a tool that touches your code on your branch. We rebuilt v0.2 around evidence we gathered ourselves, in public. Read the research deliverables in [`docs/research/`](docs/research/) (Q1 through Q8) if you want the full architectural reasoning. Read [`docs/v0.2-plan.md`](docs/v0.2-plan.md) if you want the strategic plan. Read the dogfood report if you want the empirical evidence.
 
 ---
 
@@ -215,7 +243,7 @@ Yes for single-repo operations. Cross-repo coordination is post-MVP. **Caveat fo
 The MVP wedge is solo + 2–5 person teams. AI-native startups (10–50 eng) and mid-market orgs (50–500 eng) get a *partially* working un-punt at MVP — captures and sweeps work, but cross-dev item dedup and team aggregation only land in Phase 3. If your repo has multiple people committing every day, you'll get value but you'll see your captures, not the team's, until then.
 
 **What if I run in `--dangerously-skip-permissions` mode?**
-un-punt detects this at session start and refuses to operate. The categorical refusal layer depends on the standard permission system (Claude Code hooks behave unpredictably under `--dangerously-skip-permissions` per Anthropic's open issue tracker). We'd rather not run than run without our trust gates.
+The skill operates normally in bypass mode (per Decision 14 May 2026 revision). However, **bypass mode silently disables hooks** per Anthropic's open issue tracker (#39523, #18846, #41615) — meaning v0.2's silent-capture and wrap-up-suggestion hooks won't fire. Bypass-mode users get the v0.1 experience: cold-start (`/un-punt` slash command) works fully, but real-time capture during normal Edit/Write tool calls won't happen. Documented as a known limitation; not a bug.
 
 ---
 
@@ -224,8 +252,9 @@ un-punt detects this at session start and refuses to operate. The categorical re
 | Phase | Status | What |
 |---|---|---|
 | **Phase 0**: skill + golden-set eval | shipped | ~73-scenario eval (30 capture + 25 non-capture + 8 adversarial + 10 planning); stage-gate framing with Wilson 95% CI half-width ±0.10 directional signal |
-| **Phase 1**: Claude Code MVP | v0.1 (current) | the core capture + sweep loop, ~9–11 day build (incl. B8 verification on N=5 repos × M=3 session shapes before launch) |
-| **Phase 2**: Codex adapter, Cursor experimental | in progress | shared skill body; per-platform shells. Cursor support limited by `.cursor/rules` triggers |
+| **Phase 1**: Claude Code MVP (v0.1) | shipped + dogfooded | core capture + sweep loop. Dogfooded on a real product build May 2026; uncovered foundation issue (description-match auto-loading + post-bootstrap silence). |
+| **Phase 1+: v0.2 hooks contingency** | **current** | Decision #21 hooks (SessionStart + PostToolUse + UserPromptSubmit). All 4 failed v0.1 probes pass. Re-validated end-to-end May 2026. |
+| **Phase 2**: Codex + Cursor adapters | v0.2.x patches | Both platforms shipped stable hook systems + same SKILL.md open standard. Future-lift ~80 LOC each per Q2 research. |
 | **Phase 3**: review-time / scheduled sweeps | planned | GitHub Action on PR open; cron-driven sweeps; multi-dev item dedup |
 | **Phase 4**: team aggregation | planned | optional dashboard for engineering leaders |
 
