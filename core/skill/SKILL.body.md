@@ -194,7 +194,13 @@ You don't run sweeps unsolicited. You *suggest* one when the moment is right.
 
 ### Suggest when
 
-- The user signals end-of-feature ("done", "looks good", "ship it", "okay we're good", "let's call it")
+**The phrase examples below are NOT exhaustive.** Real users signal stopping points in many ways — *"OK"*, *"that should do it"*, *"I think we're good here"*, *"alright, moving on to ..."*, *"phew"*, or just shifting topic away from the active feature. Apply judgment using the full conversation context, not phrase-matching. The phrase examples are starter signals; the underlying intent is *"the user is closing out the active work loop and would tolerate a brief offer."*
+
+<!-- LOAD-BEARING (per v0.2.0 user feedback): the original list of phrase examples below is empirically too narrow. Many users never use these exact phrases; relying on phrase-matching missed real wrap-up moments. The framing line above is the load-bearing instruction. -->
+
+Trigger signals (any of these — not exhaustive):
+
+- The user signals end-of-feature (examples: "done", "looks good", "ship it", "okay we're good", "let's call it" — and **anything else that means "stop"**)
 - The user signals end-of-day / end-of-session ("wrap up", "sign off", "done for today")
 - The user signals an area switch ("now let's switch to billing", "moving on to the API layer")
 - ≥5 items captured today for files in scope (default; `.un-punt/contract.md` `caps:` can override)

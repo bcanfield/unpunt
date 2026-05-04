@@ -226,27 +226,18 @@ export async function install(rawPlatform: string): Promise<void> {
     console.log(chalk.dim(`• Contract already exists at ${cwdContract} — left intact`));
   }
 
-  // 5. Copy AGENTS.md primer into <cwd>/AGENTS.md if not present.
-  // Per Decision #21 (Q3c): AGENTS.md is the universal cross-platform floor
-  // for graceful degradation on platforms without un-punt hook adapters
-  // (Codex/Cursor 0.2.x, Copilot/Gemini/Aider v0.3+). For Claude Code, this
-  // is redundant-but-harmless safety-net (hooks already load the same content).
-  // Skip silently if user already has an AGENTS.md (don't risk clobbering
-  // their content; user can manually paste the primer if they want it).
-  const adapterAgentsTemplate = resolve(ADAPTER_ROOT, "AGENTS.md.template");
-  const cwdAgentsMd = resolve(process.cwd(), "AGENTS.md");
-  if (fileExists(adapterAgentsTemplate)) {
-    if (!fileExists(cwdAgentsMd)) {
-      await cp(adapterAgentsTemplate, cwdAgentsMd);
-      console.log(chalk.green(`✓ AGENTS.md primer → ${cwdAgentsMd}`));
-    } else {
-      console.log(
-        chalk.dim(
-          `• AGENTS.md already exists at ${cwdAgentsMd} — left intact (paste primer manually if desired; template at ${adapterAgentsTemplate})`,
-        ),
-      );
-    }
-  }
+  // 5. AGENTS.md primer — NOT auto-installed (per v0.2.0 user feedback).
+  // Originally Decision #21 had us auto-write a ~70-line un-punt primer into
+  // the user's AGENTS.md. That was invasive: AGENTS.md belongs to the user,
+  // and dumping tool-specific content into it pollutes the project primer.
+  //
+  // Current design: the primer template ships at adapters/claude-code/
+  // AGENTS.md.template (and after install: ~/.claude/skills/un-punt/
+  // AGENTS.md.template) as documentation. Users who want it copy it manually
+  // — most users on Claude Code don't need it (the SessionStart hook covers
+  // activation). The primer is load-bearing only for cross-platform
+  // graceful degradation on platforms without un-punt hook adapters
+  // (e.g., Aider Tier 3) — those users are explicitly opting in.
 
   // 6. Success guidance (3 lines).
   console.log("");

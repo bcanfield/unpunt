@@ -84,10 +84,11 @@ You never typed `/un-punt`. Items, sweeps, and lifecycle live as markdown in `.u
 After install + Claude Code restart:
 - The skill loads at session start (a SessionStart hook activates it reliably)
 - Three hooks (`SessionStart`, `PostToolUse`, `UserPromptSubmit`) merge into your `~/.claude/settings.json`
-- An `AGENTS.md` primer drops into the current repo (skipped if you already have one)
 - The skill is available to the agent — no `/un-punt` command needed for capture
 
 The hooks are stateless bash scripts that emit context reminders for the agent. They don't classify content; the agent does. [Decision #21](docs/08-design-decisions.md) documents the architecture and why.
+
+If you want a project-level primer (e.g., for cross-platform sharing with Codex / Cursor / Aider users), an AGENTS.md template ships at `~/.claude/skills/un-punt/AGENTS.md.template` post-install. Copy it manually into your project's `AGENTS.md` or `CLAUDE.md` if you want it. The install does NOT auto-write to AGENTS.md — your project primer is yours.
 
 ### Codex / Cursor
 
@@ -111,7 +112,7 @@ cd ~/path/to/your/repo
 
 The `install` command merges un-punt's `permissions.{allow,ask,deny}` into your `~/.claude/settings.json`, copies the skill into `~/.claude/skills/un-punt/`, and drops a contract template into `<cwd>/.un-punt/contract.md`. Re-running `install` is idempotent.
 
-v0.2 also merges a `hooks` block into `~/.claude/settings.json` (tracked in the install manifest for clean uninstall) and copies an `AGENTS.md` primer into the current repo (skipped if one already exists).
+v0.2 also merges a `hooks` block into `~/.claude/settings.json` (tracked in the install manifest for clean uninstall). An optional cross-platform AGENTS.md primer template lives at `~/.claude/skills/un-punt/AGENTS.md.template` for users who want to add it to their projects manually.
 
 ### Verify
 
@@ -243,7 +244,7 @@ Yes for single-repo operations. Cross-repo coordination is post-MVP. **Caveat fo
 The MVP wedge is solo + 2–5 person teams. AI-native startups (10–50 eng) and mid-market orgs (50–500 eng) get a *partially* working un-punt at MVP — captures and sweeps work, but cross-dev item dedup and team aggregation only land in Phase 3. If your repo has multiple people committing every day, you'll get value but you'll see your captures, not the team's, until then.
 
 **What if I run in `--dangerously-skip-permissions` mode?**
-The skill operates normally in bypass mode (per Decision 14 May 2026 revision). However, **bypass mode silently disables hooks** per Anthropic's open issue tracker (#39523, #18846, #41615) — meaning v0.2's silent-capture and wrap-up-suggestion hooks won't fire. Bypass-mode users get the v0.1 experience: cold-start (`/un-punt` slash command) works fully, but real-time capture during normal Edit/Write tool calls won't happen. Documented as a known limitation; not a bug.
+**Hooks fire normally in bypass mode.** Per the official Claude Code docs ([hooks-guide §"Hooks and permission modes"](https://code.claude.com/docs/en/hooks-guide.md)), `PreToolUse` hooks specifically fire *before* any permission-mode check, and `permissionDecision: "deny"` blocks the tool even in `bypassPermissions`. Other hook events (SessionStart, PostToolUse, UserPromptSubmit) are not permission-gated and run normally. This was empirically confirmed in v0.2 dogfood — full real-time capture and wrap-up-suggestion behavior in bypass mode. The earlier docs claim that "hooks are silently disabled" was wrong (corrected May 2026). What IS reduced in bypass mode: the `permissions.deny` floor on auth/payments/migrations paths becomes unreliable. The disposition prompt + skill body's interpretive refusals are the load-bearing safety in bypass mode (per Decision 14).
 
 ---
 
