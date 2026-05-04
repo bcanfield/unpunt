@@ -85,6 +85,21 @@ else
   exit 1
 fi
 
+# Regression check: settings.json must NOT contain literal '$HOME' in hook commands.
+# Background: pre-fix versions of install.ts wrote 'bash $HOME/.claude/skills/...'
+# which Claude Code's hook executor does not reliably shell-expand at exec time.
+# Hooks installed but failed to fire silently. Fixed in commit b3b1303 — install.ts
+# now substitutes $HOME with the user's literal absolute path. Verify here.
+if grep -E '"command"\s*:\s*"[^"]*\$HOME' "$HOME/.claude/settings.json" 2>/dev/null > /dev/null; then
+  say "$YELLOW" "REGRESSION: settings.json contains literal \$HOME in hook commands"
+  say "$DIM"     "  → Claude Code's hook executor does not shell-expand env vars in command strings;"
+  say "$DIM"     "  → hooks will fire but bash will fail to find the script (silent failure)."
+  say "$DIM"     "  → Fix: \`un-punt uninstall && un-punt install claude-code\` with current CLI."
+  exit 1
+else
+  say "$GREEN" "Hook command paths absolute (no \$HOME literals)"
+fi
+
 if [ -f "$DASHBOARDS_REPO/AGENTS.md" ]; then
   say "$DIM" "AGENTS.md already at $DASHBOARDS_REPO/AGENTS.md (left intact by install)"
 else

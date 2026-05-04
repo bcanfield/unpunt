@@ -252,6 +252,18 @@ If any of 9–12 fails: the failure is much narrower than v0.1's foundation crac
 
 > Each Q-session appends a single paragraph here when it completes. Format: `### Q<N> — <date> — <one-line headline>` followed by 2–6 sentences of outcome + citation trail. This section is the canonical record of decisions; the rest of this doc is the framing.
 
+### v0.2.0-fix1 — 2026-05-04 — `$HOME` literal in hook commands silently disabled all hooks; fixed in install.ts + validate-v0.2.sh regression check added
+
+**Bug discovered during real punt-board feature work**: after the v0.2 architecture passed Probes 9–12 cleanly on May 2, the user resumed Zone 4/6 work on May 4 and observed the v0.1 silent-failure pattern recurring — ~3 commits of feature work, no items captured, no wrap-up suggestion at "ship it." Diagnosis: the CLI install wrote literal `bash $HOME/.claude/skills/un-punt/hooks/<script>.sh` into user `settings.json`. Claude Code's hook executor did not reliably shell-expand `$HOME` at exec time, so bash received `$HOME/.claude/...` as the script path and failed to find it. Hooks fired but their scripts couldn't run. **Failure was silent** — no warning, no log, just no captures. **The May 2 probes passed because of session-state quirk** (likely environment that happened to have `$HOME` resolved at the right moment); after a Claude Code session boundary on May 4 the expansion stopped happening.
+
+**Fix landed in commit `b3b1303`**: `packages/cli/src/install.ts` now substitutes `$HOME` with `os.homedir()` at install time before merging into user settings.json. Adapter source file (`adapters/claude-code/settings.json`) keeps `$HOME` for cross-machine portability; substitution happens once per machine at install. Manifest tracks the substituted (absolute) paths so uninstall matches correctly.
+
+**Live patch applied** to user's existing install — surgical Python script replaced `$HOME` with `/Users/bcanfield` in both `~/.claude/settings.json` hook commands and `~/.claude/un-punt-install.json` manifest's `added_hooks`. Backups left at `*.pre-home-fix.bak`. After Claude Code restart, agent confirmed: SessionStart hook fires, on-demand SKILL.md loading works, PostToolUse hook fires, items count climbs on real Edit calls. **v0.2 fully validated end-to-end after the fix.**
+
+**Regression check added** to `scripts/validate-v0.2.sh` (commit pending): grep for literal `$HOME` in user settings.json hook commands; fail-fast with actionable message if found. Catches this regression for future users in 5 LOC.
+
+**Lesson for the v0.2 launch story**: this is a strong arc to include in the README — *"v0.2 shipped, broke 2 days later due to a path-expansion quirk we couldn't have caught in unit tests, diagnosed in 30 min, fixed in 5 LOC, regression-checked. The dogfood didn't end at v0.2 ship; it kept finding bugs."* The "we use it ourselves and it bites us before our users" credibility builder beats any "tested in production" claim.
+
 ### Q6 series complete — 2026-05-02 — v0.2 implementation shipped across 6 chunks / 6 commits / ~600 LOC
 
 | Chunk | Commit | Files | LOC |
