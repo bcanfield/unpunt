@@ -1,6 +1,6 @@
 # Q8a — Minor findings disposition
 
-> Synthesis session per [`docs/v2-research-plan.md`](../v2-research-plan.md). Date: 2026-05-02. **Claude proposes; user confirms** (USER GATE).
+> Synthesis session per [`docs/v0.2-research-plan.md`](../v0.2-research-plan.md). Date: 2026-05-02. **Claude proposes; user confirms** (USER GATE).
 
 ## Question
 

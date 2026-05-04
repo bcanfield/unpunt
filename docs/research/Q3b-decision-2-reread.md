@@ -1,6 +1,6 @@
 # Q3b — Decision 2 (agent is engine, no separate classifier) re-read against Q4a sketches
 
-> Synthesis session per [`docs/v2-research-plan.md`](../v2-research-plan.md). Date: 2026-05-02. Owner: claude. Resolves the three hand-off questions Q4a left for this session.
+> Synthesis session per [`docs/v0.2-research-plan.md`](../v0.2-research-plan.md). Date: 2026-05-02. Owner: claude. Resolves the three hand-off questions Q4a left for this session.
 
 ## Question
 

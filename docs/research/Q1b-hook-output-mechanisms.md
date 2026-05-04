@@ -1,6 +1,6 @@
 # Q1b — Claude Code hook output mechanisms
 
-> Research session per [`docs/v2-research-plan.md`](../v2-research-plan.md). Date: 2026-05-02. Continuation of Q1a context via the `cc-docs` agent.
+> Research session per [`docs/v0.2-research-plan.md`](../v0.2-research-plan.md). Date: 2026-05-02. Continuation of Q1a context via the `cc-docs` agent.
 
 ## Question
 

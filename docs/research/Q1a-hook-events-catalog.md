@@ -1,6 +1,6 @@
 # Q1a — Claude Code hook events catalog
 
-> Research session per [`docs/v2-research-plan.md`](../v2-research-plan.md). Pilot session — first run of the v2 research methodology. Date: 2026-05-02.
+> Research session per [`docs/v0.2-research-plan.md`](../v0.2-research-plan.md). Pilot session — first run of the v2 research methodology. Date: 2026-05-02.
 
 ## Question
 
@@ -331,7 +331,7 @@ For Q5 architecture decision, the events most directly addressing v0.1's failed 
 
 **Architecture note**: `type: "prompt"` mode (supported on PreToolUse, PostToolUse, Stop, SubagentStop, UserPromptSubmit) is the load-bearing discovery for the agent-as-engine concern raised earlier. Un-punt could ship hooks that hand each event to the model with un-punt's rules in the prompt, and let the model do the classification — preserving Decision 2 in spirit.
 
-## Constraints check (against `v2-plan.md` non-negotiables)
+## Constraints check (against `v0.2-plan.md` non-negotiables)
 
 This is a research catalog only — no architectural commitment yet. Constraint check is therefore mostly N/A; the constraints will bind in Q5c when an architecture is selected. Two notes:
 
@@ -363,4 +363,4 @@ This conclusion would be invalidated if:
 - Changelog URL: https://code.claude.com/docs/en/changelog.md
 - `claude-code-guide` agent run: 2026-05-02
 - `plugin-dev:hook-development` skill loaded at: `~/.claude/plugins/cache/claude-plugins-official/plugin-dev/unknown/skills/hook-development/SKILL.md`
-- Un-punt repo files referenced: `packages/cli/src/install.ts`, `docs/v2-plan.md`, `docs/v2-research-plan.md`
+- Un-punt repo files referenced: `packages/cli/src/install.ts`, `docs/v0.2-plan.md`, `docs/v0.2-research-plan.md`

@@ -1,6 +1,6 @@
 # Q1c — Plugin install vs skill-direct hook registration
 
-> Research session per [`docs/v2-research-plan.md`](../v2-research-plan.md). Date: 2026-05-02. Combined into the Q1b agent run via the `cc-docs` agent.
+> Research session per [`docs/v0.2-research-plan.md`](../v0.2-research-plan.md). Date: 2026-05-02. Combined into the Q1b agent run via the `cc-docs` agent.
 
 ## Question
 

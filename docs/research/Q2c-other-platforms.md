@@ -1,6 +1,6 @@
 # Q2c — Copilot / Gemini CLI / Aider hook analogues
 
-> Research session per [`docs/v2-research-plan.md`](../v2-research-plan.md). Date: 2026-05-02. Web research via `other-platforms` general-purpose agent.
+> Research session per [`docs/v0.2-research-plan.md`](../v0.2-research-plan.md). Date: 2026-05-02. Web research via `other-platforms` general-purpose agent.
 
 ## Question
 

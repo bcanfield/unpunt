@@ -1,6 +1,6 @@
 # Q3c — Decision 13 (skill not hooks for self-capture) re-read + Decision #21 draft
 
-> Synthesis session per [`docs/v2-research-plan.md`](../v2-research-plan.md). Date: 2026-05-02. Owner: claude. Closes the Q3 series; produces the load-bearing supersession text for the v0.2 architecture decision.
+> Synthesis session per [`docs/v0.2-research-plan.md`](../v0.2-research-plan.md). Date: 2026-05-02. Owner: claude. Closes the Q3 series; produces the load-bearing supersession text for the v0.2 architecture decision.
 
 ## Question
 
@@ -155,6 +155,6 @@ This conclusion would change if:
 - **Q5b** (comparison matrix): one row per remaining variant; probably 2–3 rows total (Claude-Code-only v0.2 vs Claude-Code+AGENTS-fallback v0.2 vs Claude-Code+Cursor+Codex v0.2).
 - **Q5c** (architecture decision + change set): user-confirmation gate. The change set is now well-defined: 3 hook scripts, 1 CLI extension (~30 LOC), SKILL body edits per Q4b, contract template fix per Q8, AGENTS.md primer template, plus the docs (Decision #21 + build plan + risks + skill brief).
 - **Q6** (implementation): one chunk per change-set item. Depends on Q5c.
-- **Q7** (re-dogfood validation): unchanged from v2-plan.md design. Must measure Sketch (ii) compliance percentage.
+- **Q7** (re-dogfood validation): unchanged from v0.2-plan.md design. Must measure Sketch (ii) compliance percentage.
 - **Q8** (minor findings disposition): unchanged. Now includes the contract template fix as a load-bearing dependency on Decision #21.
 - **Q9** (build plan + risks + skill brief updates): well-defined. Update Phase 1 to reflect hooks-at-MVP per Decision #21; annotate B8 as MATERIALIZED; clarify skill brief that hooks are the activation layer.

@@ -1,6 +1,6 @@
 # Q5b — v0.2 architecture comparison matrix
 
-> Synthesis session per [`docs/v2-research-plan.md`](../v2-research-plan.md). Date: 2026-05-02. Owner: claude.
+> Synthesis session per [`docs/v0.2-research-plan.md`](../v0.2-research-plan.md). Date: 2026-05-02. Owner: claude.
 >
 > **User-gate hygiene rule (methodology refinement #3) explicitly applied here**: this session compares the Q5a candidates and identifies which are Pareto-optimal (frontier) vs dominated. **It does NOT pick a winner.** Q5c is the user-confirmation gate where the choice happens. The frontier identification narrows the choice space; the user picks.
 

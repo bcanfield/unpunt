@@ -1,6 +1,6 @@
 # Q4b — Long-tail signal coverage check
 
-> Synthesis session per [`docs/v2-research-plan.md`](../v2-research-plan.md). Date: 2026-05-02. Owner: claude.
+> Synthesis session per [`docs/v0.2-research-plan.md`](../v0.2-research-plan.md). Date: 2026-05-02. Owner: claude.
 
 ## Question
 

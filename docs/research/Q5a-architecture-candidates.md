@@ -1,6 +1,6 @@
 # Q5a — v0.2 architecture candidates (enumeration only)
 
-> Synthesis session per [`docs/v2-research-plan.md`](../v2-research-plan.md). Date: 2026-05-02. Owner: claude.
+> Synthesis session per [`docs/v0.2-research-plan.md`](../v0.2-research-plan.md). Date: 2026-05-02. Owner: claude.
 >
 > **User-gate hygiene rule (methodology refinement #3) explicitly applied here**: this session enumerates options without collapsing to a verdict. Q5b will compare; **Q5c is the user-confirmation gate where the choice gets made.** This file should not be read as "the architecture is X." It should be read as "the architecture is one of {A, B, C, D, E}; here's what each actually entails."
 

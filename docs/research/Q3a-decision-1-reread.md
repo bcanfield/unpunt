@@ -1,6 +1,6 @@
 # Q3a — Decision 1 (markdown not SQLite) re-read against Q1+Q2 evidence
 
-> Synthesis session per [`docs/v2-research-plan.md`](../v2-research-plan.md). Date: 2026-05-02. Owner: claude.
+> Synthesis session per [`docs/v0.2-research-plan.md`](../v0.2-research-plan.md). Date: 2026-05-02. Owner: claude.
 
 ## Question
 

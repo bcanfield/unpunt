@@ -1,6 +1,6 @@
 # Q5c — v0.2 architecture decision + change set
 
-> Synthesis session per [`docs/v2-research-plan.md`](../v2-research-plan.md). Date: 2026-05-02. Owner: claude proposed, **user confirmed**.
+> Synthesis session per [`docs/v0.2-research-plan.md`](../v0.2-research-plan.md). Date: 2026-05-02. Owner: claude proposed, **user confirmed**.
 
 ## User-gate inputs (verbatim)
 

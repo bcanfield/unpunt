@@ -1,6 +1,6 @@
 # Q4a — Pattern detection vs interpretive judgment: where's the line?
 
-> Synthesis session per [`docs/v2-research-plan.md`](../v2-research-plan.md). Date: 2026-05-02. Owner: claude. **Provisional read of Decision 2 — Q3b validates against full decision context.**
+> Synthesis session per [`docs/v0.2-research-plan.md`](../v0.2-research-plan.md). Date: 2026-05-02. Owner: claude. **Provisional read of Decision 2 — Q3b validates against full decision context.**
 
 ## Question
 
