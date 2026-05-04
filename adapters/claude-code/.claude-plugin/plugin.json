@@ -1,6 +1,6 @@
 {
   "name": "un-punt",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Captures deferrals during agent work, proposes verified cleanup passes at natural stopping points.",
   "skills": "skills/"
 }
